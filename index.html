@@ -4,93 +4,243 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>লগইন - সরকারি চাকরি টাইপিং টেস্ট পোর্টাল</title>
-    <link rel="stylesheet" href="css/main.css">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* All CSS Integrated */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background: #f1f5f9; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+        .login-card { 
+            background: white; 
+            padding: 35px 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08); 
+            width: 100%; 
+            max-width: 400px; 
+            border: 1px solid #e2e8f0; 
+        }
+        .login-header { text-align: center; margin-bottom: 25px; }
+        .login-header i { font-size: 40px; color: #0284c7; margin-bottom: 10px; }
+        .login-header h2 { font-size: 20px; color: #0f172a; margin-bottom: 5px; }
+        .login-header p { font-size: 13px; color: #64748b; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-weight: 600; font-size: 13px; color: #334155; margin-bottom: 6px; }
+        .form-group input, .form-group select { 
+            width: 100%; 
+            padding: 11px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 6px; 
+            font-size: 14px; 
+            outline: none; 
+            transition: 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+        .btn { width: 100%; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .btn-primary { background: #0284c7; color: white; }
+        .btn-primary:hover { background: #0369a1; }
+        .login-links { display: flex; justify-content: space-between; margin-top: 15px; font-size: 13px; }
+        .login-links a { color: #0284c7; text-decoration: none; font-weight: 600; cursor: pointer; }
+        .login-links a:hover { text-decoration: underline; }
+        .error-msg { background: #fee2e2; color: #dc2626; padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 15px; display: none; text-align: center; }
+        
+        /* Modal Styles */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+        .modal-card { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 400px; }
+        .modal-card h3 { font-size: 18px; margin-bottom: 15px; color: #0f172a; }
+        .close-btn { background: #e2e8f0; color: #334155; margin-top: 10px; }
+    </style>
 </head>
-<body class="login-body">
+<body>
 
-<div class="login-card">
-    <h2>টাইপিং টেস্ট পোর্টাল</h2>
-    <p>পরীক্ষার্থীর লগইন প্যানেল</p>
+    <!-- Login View -->
+    <div class="login-card">
+        <div class="login-header">
+            <i class="fa-solid fa-keyboard"></i>
+            <h2>টাইপিং টেস্ট পোর্টাল</h2>
+            <p>পরীক্ষার্থীর লগইন প্যানেল</p>
+        </div>
 
-   <form id="loginForm" onsubmit="handleLogin(event)">
-    <div class="form-group">
-        <label for="username">ইউজার আইডি / রোল নম্বর</label>
-        <input type="text" id="username" placeholder="User ID বা Roll দিন" required>
-    </div>
-    <div class="form-group">
-        <label for="password">পাসওয়ার্ড</label>
-        <input type="password" id="password" placeholder="Password দিন" required>
-    </div>
-    <button type="submit" class="btn-action">লগইন করুন</button>
-    <div id="login-error" class="msg-box error-msg" style="display:none; color:red; margin-top:10px;">
-        ❌ ভুল ইউজার আইডি অথবা পাসওয়ার্ড!
-    </div>
-</form>
+        <div id="login-error" class="error-msg">⚠️ ইউজার আইডি বা পাসওয়ার্ড ভুল!</div>
 
-    <div class="extra-links">
-        <a onclick="openModal('forgotModal')">পাসওয়ার্ড ভুলে গেছেন?</a>
-        <a onclick="openModal('registerModal')">নতুন একাউন্ট খুলুন</a>
-    </div>
-</div>
-
-<!-- REGISTRATION MODAL -->
-<div class="modal-overlay" id="registerModal">
-    <div class="modal-box">
-        <span class="close-btn" onclick="closeModal('registerModal')">&times;</span>
-        <h3>চাকরি প্রার্থীর অ্যাকাউন্ট নিবন্ধন</h3>
-        <form onsubmit="handleRegister(event)">
+        <form onsubmit="handleLogin(event)">
             <div class="form-group">
-                <label>আবেদনকারীর নাম (Full Name)</label>
-                <input type="text" id="reg-fullname" placeholder="আপনার পূর্ণ নাম লিখুন" required>
+                <label>ইউজার আইডি / রোল নম্বর</label>
+                <input type="text" id="username" placeholder="User ID বা Roll দিন" required>
             </div>
             <div class="form-group">
-                <label>আবেদনকৃত পদ (Post Name)</label>
-                <select id="reg-post" required>
-                    <option value="">-- পদ নির্বাচন করুন --</option>
-                    <option value="কম্পিউটার অপারেটর">কম্পিউটার অপারেটর</option>
-                    <option value="সাঁটমুদ্রাক্ষরিক কাম কম্পিউটার অপারেটর">সাঁটমুদ্রাক্ষরিক কাম কম্পিউটার অপারেটর</option>
-                    <option value="অফিস সহকারী কাম কম্পিউটার মুদ্রাক্ষরিক">অফিস সহকারী কাম কম্পিউটার মুদ্রাক্ষরিক</option>
-                </select>
+                <label>পাসওয়ার্ড</label>
+                <input type="password" id="password" placeholder="Password দিন" required>
             </div>
-            <div class="form-group">
-                <label>মোবাইল নম্বর (Mobile No)</label>
-                <input type="tel" id="reg-mobile" placeholder="017XXXXXXXX" pattern="[0-9]{11}" required>
-            </div>
-            <div class="form-group">
-                <label>ইউজার আইডি / রোল (User ID/Roll)</label>
-                <input type="text" id="reg-username" placeholder="User ID দিন" required>
-            </div>
-            <div class="form-group">
-                <label>পাসওয়ার্ড (Password)</label>
-                <input type="password" id="reg-password" placeholder="Password দিন" required>
-            </div>
-            <button type="submit" class="btn-action" style="background: #28a745;">অ্যাকাউন্ট তৈরি করুন</button>
+            <button type="submit" class="btn btn-primary">লগইন করুন</button>
         </form>
-    </div>
-</div>
 
-<!-- FORGOT MODAL -->
-<div class="modal-overlay" id="forgotModal">
-    <div class="modal-box">
-        <span class="close-btn" onclick="closeModal('forgotModal')">&times;</span>
-        <h3>পাসওয়ার্ড পুনরুদ্ধার ও পরিবর্তন</h3>
-        <div class="form-group">
-            <label>আপনার ইউজার আইডি / রোল</label>
-            <input type="text" id="forgot-username" placeholder="User ID দিন">
+        <div class="login-links">
+            <a onclick="openModal('forgotModal')">পাসওয়ার্ড ভুলে গেছেন?</a>
+            <a onclick="openModal('registerModal')">নতুন একাউন্ট খুলুন</a>
         </div>
-        <div class="btn-group">
-            <button type="button" class="btn-action" style="background: #ffc107; color: #000;" onclick="showResetFields()">যাচাই করুন</button>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="registerModal" class="modal-overlay">
+        <div class="modal-card">
+            <h3>নতুন একাউন্ট নিবন্ধন</h3>
+            <form onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>পূর্ণ নাম</label>
+                    <input type="text" id="reg-fullname" placeholder="আপনার পুরো নাম" required>
+                </div>
+                <div class="form-group">
+                    <label>আবেদনকৃত পদ</label>
+                    <select id="reg-post">
+                        <option value="কম্পিউটার অপারেটর">কম্পিউটার অপারেটর</option>
+                        <option value="সাঁটমুদ্রাক্ষরিক">সাঁটমুদ্রাক্ষরিক</option>
+                        <option value="অফিস সহকারী">অফিস সহকারী</option>
+                        <option value="ডাটা এন্ট্রি অপারেটর">ডাটা এন্ট্রি অপারেটর</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>জেলা</label>
+                    <input type="text" id="reg-district" placeholder="আপনার জেলা" required>
+                </div>
+                <div class="form-group">
+                    <label>মোবাইল নম্বর</label>
+                    <input type="text" id="reg-mobile" placeholder="017xxxxxxxx" required>
+                </div>
+                <div class="form-group">
+                    <label>ইউজার আইডি (ইউনিক)</label>
+                    <input type="text" id="reg-username" placeholder="যেমন: karim123" required>
+                </div>
+                <div class="form-group">
+                    <label>পাসওয়ার্ড</label>
+                    <input type="password" id="reg-password" placeholder="পাসওয়ার্ড দিন" required>
+                </div>
+                <button type="submit" class="btn btn-primary">নিবন্ধন সম্পন্ন করুন</button>
+                <button type="button" class="btn close-btn" onclick="closeModal('registerModal')">বাতিল</button>
+            </form>
         </div>
-        <div id="reset-section" style="display: none; margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px;">
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotModal" class="modal-overlay">
+        <div class="modal-card">
+            <h3>পাসওয়ার্ড পুনর্দোদ্ধার</h3>
             <div class="form-group">
-                <label>নতুন পাসওয়ার্ড (New Password)</label>
-                <input type="password" id="new-password" placeholder="নতুন পাসওয়ার্ড দিন">
+                <label>আপনার ইউজার আইডি</label>
+                <input type="text" id="forgot-username" placeholder="User ID লিখুন">
             </div>
-            <button type="button" class="btn-action" style="background: #dc3545;" onclick="saveNewPassword()">পাসওয়ার্ড আপডেট করুন</button>
+            <button type="button" class="btn btn-primary" onclick="showResetFields()">আইডি খুঁজুন</button>
+            
+            <div id="reset-section" style="display:none; margin-top:15px;">
+                <div class="form-group">
+                    <label>নতুন পাসওয়ার্ড</label>
+                    <input type="password" id="new-password" placeholder="নতুন পাসওয়ার্ড লিখুন">
+                </div>
+                <button type="button" class="btn btn-primary" onclick="saveNewPassword()">পাসওয়ার্ড পরিবর্তন করুন</button>
+            </div>
+            <button type="button" class="btn close-btn" onclick="closeModal('forgotModal')">বন্ধ করুন</button>
         </div>
     </div>
-</div>
 
-<script src="js/auth.js"></script>
+    <!-- All JS Logic Integrated -->
+    <script>
+        (function initAdmin() {
+            let users = JSON.parse(localStorage.getItem('usersData')) || {};
+            if (!users["admin"]) {
+                users["admin"] = {
+                    fullname: "সিস্টেম অ্যাডমিন",
+                    post: "অ্যাডমিনিস্ট্রেটর",
+                    district: "ঢাকা",
+                    mobile: "01722243656",
+                    pass: "123456",
+                    userId: "admin",
+                    role: "admin"
+                };
+                localStorage.setItem('usersData', JSON.stringify(users));
+            }
+        })();
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if(modal) modal.style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if(modal) modal.style.display = 'none';
+        }
+
+        function handleLogin(event) {
+            if (event) event.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const users = JSON.parse(localStorage.getItem('usersData')) || {};
+
+            if (users[user] && users[user].pass === pass) {
+                sessionStorage.setItem('loggedInUser', JSON.stringify(users[user]));
+                localStorage.setItem('loggedInUser', JSON.stringify(users[user]));
+                
+                if (user === 'admin') {
+                    window.location.replace("admin.html");
+                } else {
+                    window.location.replace("portal.html");
+                }
+            } else {
+                const errBox = document.getElementById('login-error');
+                if (errBox) errBox.style.display = "block";
+            }
+        }
+
+        function handleRegister(event) {
+            if (event) event.preventDefault();
+            const fullname = document.getElementById('reg-fullname').value.trim();
+            const post = document.getElementById('reg-post').value;
+            const district = document.getElementById('reg-district').value.trim();
+            const mobile = document.getElementById('reg-mobile').value.trim();
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+            let users = JSON.parse(localStorage.getItem('usersData')) || {};
+
+            if (users[username]) {
+                alert("❌ এই ইউজার আইডিটি ইতিমধ্যে নিবন্ধিত!");
+            } else {
+                const newUser = { fullname, post, district, mobile, pass: password, userId: username, role: "user" };
+                users[username] = newUser;
+                localStorage.setItem('usersData', JSON.stringify(users));
+                sessionStorage.setItem('loggedInUser', JSON.stringify(newUser));
+                localStorage.setItem('loggedInUser', JSON.stringify(newUser));
+                alert("✅ রেজিস্ট্রেশন সফল হয়েছে!");
+                window.location.replace("portal.html");
+            }
+        }
+
+        function showResetFields() {
+            const searchUser = document.getElementById('forgot-username').value.trim();
+            const users = JSON.parse(localStorage.getItem('usersData')) || {};
+            if (!searchUser || !users[searchUser]) return alert("⚠️ সঠিক ইউজার আইডি প্রদান করুন!");
+            document.getElementById('reset-section').style.display = "block";
+        }
+
+        function saveNewPassword() {
+            const searchUser = document.getElementById('forgot-username').value.trim();
+            const newPass = document.getElementById('new-password').value.trim();
+            let users = JSON.parse(localStorage.getItem('usersData')) || {};
+            if (!newPass) return alert("⚠️ নতুন পাসওয়ার্ড দিন!");
+
+            if (users[searchUser]) {
+                users[searchUser].pass = newPass;
+                localStorage.setItem('usersData', JSON.stringify(users));
+                alert("✅ পাসওয়ার্ড সফলভাবে আপডেট হয়েছে!");
+                closeModal('forgotModal');
+            }
+        }
+    </script>
 </body>
 </html>
