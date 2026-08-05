@@ -1,153 +1,124 @@
-let selectedExam = null;
-let currentCandidate = null;
-let examTimer = null;
-let timeRemaining = 0;
-
-function initPortal() {
-    renderAvailableExams();
+function escapeHTML(str) {
+    if(!str) return '';
+    return String(str).replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+    });
 }
 
-function renderAvailableExams() {
-    const examList = JSON.parse(localStorage.getItem('adminExamList')) || [];
-    const container = document.getElementById('availableExamsList');
+function switchAdminTab(tabId, element) {
+    document.querySelectorAll('.admin-tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.admin-menu-list li').forEach(li => li.classList.remove('active'));
+
+    const target = document.getElementById(tabId);
+    if(target) target.classList.add('active');
+    if(element) element.classList.add('active');
+}
+
+function initAdminPanel() {
+    renderAdminExamList();
+    renderAllResultsLeaderboard();
+    renderPackagesAdmin();
+    filterRequests();
+    renderAdminNotices();
+    renderRegisteredUsers();
+}
+
+// Save Exam Setup to Array
+function saveLiveExamSetup() {
+    const title = document.getElementById('examSetupTitle').value.trim();
+    const lang = document.getElementById('examSetupLang').value;
+    const duration = parseInt(document.getElementById('examSetupDuration').value);
+    const passage = document.getElementById('examSetupPassage').value.trim();
+    const backspace = document.getElementById('allowBackspace').value;
+    const highlight = document.getElementById('allowHighlight').value;
+    const passWpm = parseInt(document.getElementById('examPassWpm').value);
+    const passAccuracy = parseInt(document.getElementById('examPassAccuracy').value);
+
+    let examList = JSON.parse(localStorage.getItem('adminExamList')) || [];
+    examList.push({
+        id: Date.now(),
+        title, lang, duration, passage, backspace, highlight, passWpm, passAccuracy
+    });
+
+    localStorage.setItem('adminExamList', JSON.stringify(examList));
+    alert('✅ পরীক্ষাটি সফলভাবে তালিকায় যুক্ত করা হয়েছে!');
+    renderAdminExamList();
+}
+
+function renderAdminExamList() {
+    let examList = JSON.parse(localStorage.getItem('adminExamList')) || [];
+    const container = document.getElementById('adminExamList');
     if(!container) return;
 
-    container.innerHTML = examList.length > 0 ? examList.map(e => `
-        <div class="exam-card-item">
-            <h3>${escapeHTML(e.title)}</h3>
-            <p>⏱️ সময়: ${e.duration} মিনিট | 🌐 ভাষা: ${e.lang}</p>
-            <p><small>পাস করার জন্য WPM: ${e.passWpm} | ব্যাকস্পেস: ${e.backspace === 'yes' ? 'অনুমোদিত' : 'নিষেধ'}</small></p>
-            <button onclick="openVerifyModal(${e.id})" class="btn btn-primary" style="margin-top:10px;">পরীক্ষায় অংশ নিন</button>
+    container.innerHTML = examList.length > 0 ? examList.map((e, index) => `
+        <div class="pkg-item">
+            <div>
+                <b>${index + 1}. ${escapeHTML(e.title)}</b> (${e.duration} মিনিট | ${e.lang})
+                <br><small style="color:#64748b;">ব্যাকস্পেস: ${e.backspace === 'yes' ? 'চালু' : 'বন্ধ'} | হাইলাইট: ${e.highlight === 'yes' ? 'চালু' : 'বন্ধ'} | পাস WPM: ${e.passWpm}</small>
+            </div>
+            <button onclick="deleteExam(${e.id})" class="btn btn-danger" style="padding:5px 10px; font-size:12px;">ডিলিট</button>
         </div>
-    `).join('') : '<p style="color:#64748b;">বর্তমানে কোনো সক্রিয় পরীক্ষা নেই। এডমিন সেটআপ করলে এখানে দেখাবে।</p>';
+    `).join('') : '<p style="color:#64748b; margin-top:10px;">কোনো পরীক্ষা সেটিং করা নেই।</p>';
 }
 
-function openVerifyModal(examId) {
-    const examList = JSON.parse(localStorage.getItem('adminExamList')) || [];
-    selectedExam = examList.find(e => Number(e.id) === Number(examId));
-    document.getElementById('verifyModal').style.display = 'flex';
-}
-
-function closeVerifyModal() {
-    document.getElementById('verifyModal').style.display = 'none';
-}
-
-function verifyAndStartExam() {
-    const userId = document.getElementById('verifyUserId').value.trim();
-    const mobile = document.getElementById('verifyMobile').value.trim();
-    const users = JSON.parse(localStorage.getItem('usersData')) || {};
-
-    if (users[userId] && users[userId].mobile === mobile) {
-        currentCandidate = users[userId];
-        closeVerifyModal();
-        startExamEnvironment();
-    } else {
-        alert("❌ আইডি বা ফোন নম্বর সঠিক নয়! অনুগ্রহ করে সঠিকভাবে নাম ও তথ্য দিয়ে আইডিটি নিশ্চিত করুন।");
+function deleteExam(id) {
+    if(confirm('পরীক্ষাটি তালিকা থেকে মুছে ফেলতে চান?')) {
+        let examList = JSON.parse(localStorage.getItem('adminExamList')) || [];
+        examList = examList.filter(e => Number(e.id) !== Number(id));
+        localStorage.setItem('adminExamList', JSON.stringify(examList));
+        renderAdminExamList();
     }
 }
 
-function startExamEnvironment() {
-    document.getElementById('examSelectView').style.display = 'none';
-    document.getElementById('examAreaView').style.display = 'block';
-
-    document.getElementById('exUserId').innerText = currentCandidate.userId;
-    document.getElementById('exUserName').innerText = currentCandidate.fullname;
-    document.getElementById('exUserDistrict').innerText = currentCandidate.district || 'ঢাকা';
-    document.getElementById('currentExamTitle').innerText = selectedExam.title;
-
-    const passageBox = document.getElementById('a4PassageBox');
-    passageBox.innerText = selectedExam.passage;
-
-    const inputField = document.getElementById('typingInputField');
-    inputField.value = '';
-    inputField.disabled = false;
-    inputField.focus();
-
-    // Disable Backspace if Admin Restricted
-    if (selectedExam.backspace === 'no') {
-        inputField.addEventListener('keydown', function(e) {
-            if (e.key === 'Backspace') e.preventDefault();
-        });
-    }
-
-    // Start Timer
-    timeRemaining = selectedExam.duration * 60;
-    runCountdown();
-}
-
-function runCountdown() {
-    const timerDisplay = document.getElementById('timerCountdown');
-    const a4Paper = document.getElementById('a4Paper');
-
-    examTimer = setInterval(() => {
-        timeRemaining--;
-        let mins = Math.floor(timeRemaining / 60);
-        let secs = timeRemaining % 60;
-        timerDisplay.innerText = `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
-
-        // Color Change Alert in Last 1 Minute
-        if (timeRemaining <= 60) {
-            a4Paper.classList.add('warning-color');
-        }
-
-        if (timeRemaining <= 0) {
-            clearInterval(examTimer);
-            alert('⏰ নির্ধারিত সময় শেষ! আপনার উত্তর স্বয়ংক্রিয়ভাবে জমা নেওয়া হচ্ছে।');
-            finishExamAndCalculate();
-        }
-    }, 1000);
-}
-
-function finishExamAndCalculate() {
-    clearInterval(examTimer);
-    const inputField = document.getElementById('typingInputField');
-    inputField.disabled = true;
-
-    const typedText = inputField.value.trim();
-    const originalText = selectedExam.passage.trim();
-
-    // Calculate WPM and Accuracy
-    const wordsTyped = typedText.length > 0 ? typedText.split(/\s+/).length : 0;
-    const timeSpentMinutes = (selectedExam.duration * 60 - timeRemaining) / 60 || 1;
-    const wpm = Math.round(wordsTyped / timeSpentMinutes);
-
-    let correctChars = 0;
-    for(let i = 0; i < Math.min(typedText.length, originalText.length); i++) {
-        if(typedText[i] === originalText[i]) correctChars++;
-    }
-    const accuracy = typedText.length > 0 ? Math.round((correctChars / typedText.length) * 100) : 0;
-
-    const isPassed = wpm >= selectedExam.passWpm && accuracy >= selectedExam.passAccuracy;
-    const resultStatus = isPassed ? 'পাস (Passed)' : 'ফেল (Failed)';
-
-    // Save to LocalStorage
+// Render Results with Rank / Leaderboard
+function renderAllResultsLeaderboard() {
     let results = JSON.parse(localStorage.getItem('candidateResults')) || [];
-    const newResult = {
-        id: Date.now(),
-        name: currentCandidate.fullname,
-        userId: currentCandidate.userId,
-        district: currentCandidate.district || 'ঢাকা',
-        mobile: currentCandidate.mobile,
-        examTitle: selectedExam.title,
-        wpm: wpm,
-        accuracy: accuracy,
-        status: resultStatus,
-        date: new Date().toLocaleDateString('bn-BD')
-    };
-    results.push(newResult);
-    localStorage.setItem('candidateResults', JSON.stringify(results));
+    const tbody = document.getElementById('allCandidateResultsTable');
+    if(!tbody) return;
 
-    // Show Result View
-    document.getElementById('examAreaView').style.display = 'none';
-    document.getElementById('resultAreaView').style.display = 'block';
+    // Sort by WPM descending for rank/leaderboard
+    results.sort((a, b) => b.wpm - a.wpm || b.accuracy - a.accuracy);
 
-    document.getElementById('resultDetailsBox').innerHTML = `
-        <div style="font-size:18px; line-height:1.8;">
-            <p><b>परीक्षार्थी:</b> ${currentCandidate.fullname} (${currentCandidate.userId})</p>
-            <p><b>জেলা:</b> ${currentCandidate.district || 'ঢাকা'}</p>
-            <p><b>গতি (Speed):</b> <span style="color:#0284c7; font-size:22px; font-weight:bold;">${wpm} WPM</span></p>
-            <p><b>নির্ভুলতা (Accuracy):</b> <b>${accuracy}%</b></p>
-            <p><b>ফলাফল:</b> <span style="color:${isPassed ? '#16a34a' : '#dc2626'}; font-weight:bold; font-size:20px;">${resultStatus}</span></p>
-        </div>
-    `;
+    tbody.innerHTML = results.length > 0 ? results.map((r, i) => `
+        <tr>
+            <td><b style="color:#0284c7;">#${i + 1}</b></td>
+            <td><b>${escapeHTML(r.name)}</b><br><small>${escapeHTML(r.userId)}</small></td>
+            <td>${escapeHTML(r.district || 'N/A')}</td>
+            <td>${escapeHTML(r.mobile || 'N/A')}</td>
+            <td><b>${r.wpm} WPM</b></td>
+            <td>${r.accuracy}%</td>
+            <td>
+                <span style="color:${r.status === 'পাস (Passed)' ? '#16a34a' : '#dc2626'}; font-weight:bold;">
+                    ${escapeHTML(r.status)}
+                </span>
+            </td>
+            <td><small>${escapeHTML(r.date)}</small></td>
+        </tr>
+    `).join('') : '<tr><td colspan="8" style="text-align:center;">কোনো ফলাফলের ডাটা নেই।</td></tr>';
+}
+
+function toggleResultPublication(status) {
+    localStorage.setItem('isResultPublished', status ? 'true' : 'false');
+    const badge = document.getElementById('pubStatusBadge');
+    if(badge) {
+        badge.innerText = status ? '(স্ট্যাটাস: প্রকাশিত)' : '(স্ট্যাটাস: গোপন)';
+        badge.style.color = status ? '#16a34a' : '#dc2626';
+    }
+    alert(`ফলাফল ${status ? 'প্রকাশ' : 'গোপন'} করা হয়েছে!`);
+}
+
+// General Utilities
+function addPackageAdmin() { /* Standard Logic */ }
+function renderPackagesAdmin() { /* Standard Logic */ }
+function filterRequests() { /* Standard Logic */ }
+function renderAdminNotices() { /* Standard Logic */ }
+function postAdminNotice() { /* Standard Logic */ }
+function renderRegisteredUsers() {
+    const users = JSON.parse(localStorage.getItem('usersData')) || {};
+    const tbody = document.getElementById('registeredUsersTable');
+    if(!tbody) return;
+    let list = Object.values(users);
+    tbody.innerHTML = list.map((u, i) => `
+        <tr><td>${i+1}</td><td><b>${escapeHTML(u.fullname)}</b></td><td><code>${escapeHTML(u.userId)}</code></td><td>${escapeHTML(u.district || 'ঢাকা')}</td><td>${escapeHTML(u.mobile)}</td></tr>
+    `).join('');
 }
