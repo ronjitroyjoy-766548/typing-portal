@@ -3,81 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>অ্যাডমিন প্যানেল Pro</title>
+    <title>অ্যাডমিন কন্ট্রোল প্যানেল - টাইপিং পোর্টাল</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body onload="checkAuthGuard(); initAdminPanel();">
 
-<div class="admin-card">
-    <h2>⚙️ অ্যাডমিন প্যানেল: কন্ট্রোল ও পেমেন্ট সেন্টার</h2>
-</div>
-
-<!-- 📦 1. PACKAGE CREATION & MANAGEMENT -->
-<div class="admin-card">
-    <h3>📦 প্যাকেজ ও সুবিধাসমূহ সেটআপ করুন</h3>
-    <div class="form-group">
-        <label>প্যাকেজের নাম:</label>
-        <input type="text" id="pkgTitle" placeholder="উদাহরণ: ১ মাসের প্রিমিয়াম প্যাকেজ">
-    </div>
-    <div class="form-group" style="display: flex; gap: 10px;">
-        <div style="flex:1;">
-            <label>মূল্য (৳):</label>
-            <input type="number" id="pkgPrice" placeholder="500">
+    <!-- Top Bar -->
+    <div class="admin-nav-bar">
+        <div class="admin-logo">
+            <i class="fa-solid fa-user-shield"></i> অ্যাডমিন কন্ট্রোল ড্যাশবোর্ড
         </div>
-        <div style="flex:1;">
-            <label>মেয়াদ (দিন):</label>
-            <input type="number" id="pkgDays" placeholder="30">
+        <div class="admin-user-info">
+            <span>👋 সিস্টেম অ্যাডমিন</span>
+            <button onclick="logoutUser()" class="btn-logout-top"><i class="fa-solid fa-right-from-bracket"></i> লগআউট</button>
         </div>
     </div>
-    <div class="form-group">
-        <label>সুবিধাসমূহ (কমা দিয়ে লিখুন):</label>
-        <textarea id="pkgFeatures" placeholder="উদাহরণ: সকল এক্সাম এক্সেস, লাইভ চ্যাট সাপোর্ট, রেজাল্ট এনালাইসিস"></textarea>
+
+    <!-- Main Container -->
+    <div class="admin-dashboard-layout">
+        
+        <!-- Left Sidebar / Feature List -->
+        <aside class="admin-sidebar">
+            <ul class="admin-menu-list">
+                <li class="active" onclick="switchAdminTab('pkgSection', this)">
+                    <i class="fa-solid fa-box-open"></i> ১. প্যাকেজ ও সুবিধাসমূহ সেটআপ
+                </li>
+                <li onclick="switchAdminTab('paymentSection', this)">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> ২. পেমেন্ট রিকোয়েস্ট ম্যানেজমেন্ট
+                </li>
+                <li onclick="switchAdminTab('examSection', this)">
+                    <i class="fa-solid fa-pen-to-square"></i> ৩. লাইভ পরীক্ষা ও প্যাসেজ সেটআপ
+                </li>
+                <li onclick="switchAdminTab('noticeSection', this)">
+                    <i class="fa-solid fa-bullhorn"></i> ৪. অফিশিয়াল নোটিশ বোর্ড ম্যানেজমেন্ট
+                </li>
+                <li onclick="switchAdminTab('usersSection', this)">
+                    <i class="fa-solid fa-users"></i> ৫. নিবন্ধিত পরীক্ষার্থী তালিকা
+                </li>
+                <li onclick="switchAdminTab('resultsSection', this)">
+                    <i class="fa-solid fa-chart-line"></i> ৬. পরীক্ষার ফলাফল রিপোর্ট
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Right Content Panels -->
+        <main class="admin-content-area">
+
+            <!-- 1. Packages Management -->
+            <section id="pkgSection" class="admin-tab-content active">
+                <div class="admin-card">
+                    <h2><i class="fa-solid fa-box-open"></i> প্যাকেজ ও সুবিধাসমূহ সেটআপ করুন</h2>
+                    <hr class="section-divider">
+                    <form onsubmit="event.preventDefault(); addPackageAdmin();">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>প্যাকেজের নাম</label>
+                                <input type="text" id="pkgTitle" placeholder="যেমন: ১ মাসের প্রিমিয়াম এক্সেস" required>
+                            </div>
+                            <div class="form-group">
+                                <label>মূল্য (টাকা)</label>
+                                <input type="number" id="pkgPrice" placeholder="যেমন: ১৫০" required>
+                            </div>
+                            <div class="form-group">
+                                <label>মেয়াদ (দিন)</label>
+                                <input type="number" id="pkgDays" placeholder="যেমন: ৩০" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>সুবিধাসমূহ (কমা দিয়ে লিখুন)</label>
+                            <input type="text" id="pkgFeatures" placeholder="যেমন: সকল প্র্যাকটিস সেট, লাইভ এক্সাম, ইনস্ট্যান্ট রেজাল্ট">
+                        </div>
+                        <button type="submit" class="btn btn-success"><i class="fa-solid fa-plus"></i> নতুন প্যাকেজ যুক্ত করুন</button>
+                    </form>
+
+                    <h3 style="margin-top:25px;">বর্তমান সক্রিয় প্যাকেজসমূহ</h3>
+                    <div id="activePackagesList"></div>
+                </div>
+            </section>
+
+            <!-- 2. Payment Requests -->
+            <section id="paymentSection" class="admin-tab-content">
+                <div class="admin-card">
+                    <h2><i class="fa-solid fa-file-invoice-dollar"></i> পেমেন্ট রিকোয়েস্ট ম্যানেজমেন্ট</h2>
+                    <hr class="section-divider">
+                    
+                    <div class="filter-box">
+                        <input type="date" id="filterDate" onchange="filterRequests()">
+                        <input type="text" id="searchQuery" placeholder="ইউজারনেম / ট্রানজেকশন আইডি / মোবাইল" onkeyup="filterRequests()">
+                        <button class="btn btn-primary" onclick="resetFilter()">ফিল্টার রিসেট</button>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>তারিখ</th>
+                                <th>পরীক্ষার্থীর তথ্য</th>
+                                <th>প্যাকেজ ও মূল্য</th>
+                                <th>TrxID</th>
+                                <th>স্ট্যাটাস</th>
+                                <th>অ্যাকশন</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminPkgReqList"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 3. Live Exam Setup -->
+            <section id="examSection" class="admin-tab-content">
+                <div class="admin-card">
+                    <h2><i class="fa-solid fa-pen-to-square"></i> লাইভ পরীক্ষা ও প্যাসেজ সেটআপ</h2>
+                    <hr class="section-divider">
+                    <form onsubmit="event.preventDefault(); saveLiveExamSetup();">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>পরীক্ষার শিরোনাম / বিষয়</label>
+                                <input type="text" id="examSetupTitle" placeholder="যেমন: কম্পিউটার অপারেটর নিয়োগ পরীক্ষা - ২০২৪" required>
+                            </div>
+                            <div class="form-group">
+                                <label>পরীক্ষার ভাষা</label>
+                                <select id="examSetupLang">
+                                    <option value="bangla">বাংলা (Bangla)</option>
+                                    <option value="english">English</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>পরীক্ষার সময় (মিনিট)</label>
+                                <input type="number" id="examSetupDuration" value="5" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>পরীক্ষার অনুচ্ছেদ / প্যাসেজ (Passage Text)</label>
+                            <textarea id="examSetupPassage" rows="6" placeholder="এখানে পরীক্ষার অনুচ্ছেদটি লিখুন..." required></textarea>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>পাস করার জন্য ন্যূনতম গতি (WPM)</label>
+                                <input type="number" id="examPassWpm" value="20" required>
+                            </div>
+                            <div class="form-group">
+                                <label>পাস করার জন্য ন্যূনতম একুরেসি (%)</label>
+                                <input type="number" id="examPassAccuracy" value="80" required>
+                            </div>
+                            <div class="form-group">
+                                <label>পরীক্ষার স্ট্যাটাস</label>
+                                <select id="examStatus">
+                                    <option value="active">লাইভ (Active)</option>
+                                    <option value="inactive">বন্ধ (Inactive)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success"><i class="fa-solid fa-paper-plane"></i> পরীক্ষা সেভ ও চালু করুন</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 4. Notice Board Setup -->
+            <section id="noticeSection" class="admin-tab-content">
+                <div class="admin-card">
+                    <h2><i class="fa-solid fa-bullhorn"></i> অফিশিয়াল নোটিশ বোর্ড ম্যানেজমেন্ট</h2>
+                    <hr class="section-divider">
+                    <form onsubmit="event.preventDefault(); postAdminNotice();">
+                        <div class="form-group">
+                            <label>নতুন নোটিশের টেক্সট</label>
+                            <textarea id="noticeTextInput" rows="3" placeholder="পোর্টালে প্রদর্শনের জন্য জরুরি নোটিশ লিখুন..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-bullhorn"></i> নোটিশ পোস্ট করুন</button>
+                    </form>
+
+                    <h3 style="margin-top:25px;">সাম্প্রতিক প্রকাশিত নোটিশসমূহ</h3>
+                    <div id="adminNoticeArchive"></div>
+                </div>
+            </section>
+
+            <!-- 5. User Management -->
+            <section id="usersSection" class="admin-tab-content">
+                <div class="admin-card">
+                    <h2><i class="fa-solid fa-users"></i> নিবন্ধিত পরীক্ষার্থী তালিকা</h2>
+                    <hr class="section-divider">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>নাম</th>
+                                <th>ইউজার আইডি</th>
+                                <th>আবেদনকৃত পদ</th>
+                                <th>মোবাইল</th>
+                                <th>পাসওয়ার্ড</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registeredUsersTable"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 6. Exam Results -->
+            <section id="resultsSection" class="admin-tab-content">
+                <div class="admin-card">
+                    <h2><i class="fa-solid fa-chart-line"></i> সকল পরীক্ষার ফলাফল</h2>
+                    <hr class="section-divider">
+                    
+                    <div style="margin-bottom:15px;">
+                        <button class="btn btn-success" onclick="toggleResultPublication(true)">✅ ফলাফল প্রকাশ করুন (Publish)</button>
+                        <button class="btn btn-danger" onclick="toggleResultPublication(false)">🔒 ফলাফল হাইড করুন (Unpublish)</button>
+                        <span id="pubStatusBadge" style="margin-left:10px; font-weight:bold;"></span>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>তারিখ</th>
+                                <th>পরীক্ষার্থী</th>
+                                <th>পরীক্ষার নাম</th>
+                                <th>গতি (WPM)</th>
+                                <th>নির্ভুলতা</th>
+                                <th>ফলাফল</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allCandidateResultsTable"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
     </div>
-    <button class="btn btn-success" onclick="addPackageAdmin()">+ নতুন প্যাকেজ যুক্ত করুন</button>
 
-    <h4 style="margin-top: 20px;">বর্তমান চালু থাকা প্যাকেজসমূহ:</h4>
-    <div id="activePackagesList"></div>
-</div>
-
-<!-- 💳 2. PAYMENT REQUEST & DATE FILTERING -->
-<div class="admin-card">
-    <h3>💳 পেমেন্ট রিকোয়েস্ট ম্যানেজমেন্ট</h3>
-    
-    <!-- ফিল্টারিং অপশন -->
-    <div class="filter-box">
-        <div>
-            <label>📅 তারিখ অনুযায়ী দেখুন:</label>
-            <input type="date" id="filterDate" onchange="filterRequests()">
-        </div>
-        <div>
-            <label>🔍 মোবাইল/TrxID খুঁজুন:</label>
-            <input type="text" id="searchQuery" oninput="filterRequests()" placeholder="নাম, নম্বর বা ট্রানজেকশন আইডি...">
-        </div>
-        <button class="btn" style="margin-top: 18px;" onclick="resetFilter()">সকল পেমেন্ট দেখুন</button>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>তারিখ</th>
-                <th>প্রার্থীর নাম ও মোবাইল</th>
-                <th>প্যাকেজ, মূল্য ও মেয়াদ</th>
-                <th>TrxID</th>
-                <th>স্ট্যাটাস</th>
-                <th>অ্যাকশন</th>
-            </tr>
-        </thead>
-        <tbody id="adminPkgReqList"></tbody>
-    </table>
-</div>
-
-<script src="js/admin.js"></script>
-<script>
-    window.onload = function() {
-        renderPackagesAdmin();
-        filterRequests();
-    };
-</script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
 </body>
 </html>
