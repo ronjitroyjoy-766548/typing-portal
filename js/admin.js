@@ -1,11 +1,37 @@
-// Admin Panel Management System
+// Admin Panel Core System
+
+function escapeHTML(str) {
+    if(!str) return '';
+    return String(str).replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+    });
+}
+
+function switchAdminTab(tabId, element) {
+    document.querySelectorAll('.admin-tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.admin-menu-list li').forEach(li => li.classList.remove('active'));
+
+    const target = document.getElementById(tabId);
+    if(target) target.classList.add('active');
+    if(element) element.classList.add('active');
+}
+
+function initAdminPanel() {
+    renderPackagesAdmin();
+    filterRequests();
+    loadLiveExamSetup();
+    renderAdminNotices();
+    renderRegisteredUsers();
+    renderAllResults();
+    checkResultPubStatus();
+}
+
+// --- 1. Packages Logic ---
 function addPackageAdmin() {
     const title = document.getElementById('pkgTitle').value.trim();
     const price = document.getElementById('pkgPrice').value.trim();
     const days = document.getElementById('pkgDays').value.trim();
     const features = document.getElementById('pkgFeatures').value.trim();
-
-    if(!title || !price || !days) return alert('❌ দয়া করে প্যাকেজের নাম, মূল্য ও মেয়াদ দিন!');
 
     let pkgs = JSON.parse(localStorage.getItem('appPackages')) || [];
     pkgs.push({
@@ -13,12 +39,11 @@ function addPackageAdmin() {
         title: title,
         price: price,
         days: parseInt(days),
-        features: features.split(',').map(f => f.trim()).join(', ')
+        features: features
     });
 
     localStorage.setItem('appPackages', JSON.stringify(pkgs));
-    alert('✅ প্যাকেজ সফলভাবে যুক্ত করা হয়েছে!');
-    
+    alert('✅ প্যাকেজ যুক্ত হয়েছে!');
     document.getElementById('pkgTitle').value = '';
     document.getElementById('pkgPrice').value = '';
     document.getElementById('pkgDays').value = '';
@@ -31,50 +56,38 @@ function renderPackagesAdmin() {
     const container = document.getElementById('activePackagesList');
     if(!container) return;
 
-    if(pkgs.length === 0) {
-        container.innerHTML = `<p style="color:#777; margin-top:10px;">কোনো প্যাকেজ তৈরি করা হয়নি।</p>`;
-        return;
-    }
-
-    container.innerHTML = pkgs.map(p => `
+    container.innerHTML = pkgs.length > 0 ? pkgs.map(p => `
         <div class="pkg-item">
             <div>
-                <b>${p.title}</b> — <span style="color:#28a745;">৳${p.price}</span> (${p.days} দিন)
-                <br><small style="color:#666;">সুবিধা: ${p.features}</small>
+                <b>${escapeHTML(p.title)}</b> — <span style="color:#16a34a; font-weight:bold;">৳${escapeHTML(p.price)}</span> (${p.days} দিন)
+                <br><small style="color:#64748b;">${escapeHTML(p.features)}</small>
             </div>
-            <button onclick="deletePackage(${p.id})" class="btn btn-danger" style="padding:4px 8px; font-size:12px;">ডিলিট</button>
+            <button onclick="deletePackage(${p.id})" class="btn btn-danger" style="padding:5px 10px; font-size:12px;">ডিলিট</button>
         </div>
-    `).join('');
+    `).join('') : '<p style="color:#64748b; margin-top:10px;">কোনো সক্রিয় প্যাকেজ নেই।</p>';
 }
 
 function deletePackage(id) {
-    if(confirm('আপনি কি এই প্যাকেজটি মুছে ফেলতে চান?')) {
+    if(confirm('প্যাকেজটি মুছে ফেলতে চান?')) {
         let pkgs = JSON.parse(localStorage.getItem('appPackages')) || [];
-        pkgs = pkgs.filter(p => p.id !== id);
+        pkgs = pkgs.filter(p => Number(p.id) !== Number(id));
         localStorage.setItem('appPackages', JSON.stringify(pkgs));
         renderPackagesAdmin();
     }
 }
 
+// --- 2. Payment Requests Logic ---
 function filterRequests() {
     const selectedDate = document.getElementById('filterDate').value;
     const searchQuery = document.getElementById('searchQuery').value.toLowerCase().trim();
     const requests = JSON.parse(localStorage.getItem('pkgRequests')) || [];
 
     let filtered = requests.filter(r => {
-        let matchDate = true;
-        if (selectedDate) {
-            const reqDate = r.rawDate || new Date(r.id).toISOString().split('T')[0];
-            matchDate = (reqDate === selectedDate);
-        }
-
-        let matchSearch = true;
-        if (searchQuery) {
-            matchSearch = (r.user && r.user.toLowerCase().includes(searchQuery)) ||
-                          (r.mobile && r.mobile.includes(searchQuery)) ||
-                          (r.trx && r.trx.toLowerCase().includes(searchQuery));
-        }
-
+        let matchDate = !selectedDate || (r.rawDate === selectedDate);
+        let matchSearch = !searchQuery || 
+            (r.user && r.user.toLowerCase().includes(searchQuery)) ||
+            (r.mobile && r.mobile.includes(searchQuery)) ||
+            (r.trx && r.trx.toLowerCase().includes(searchQuery));
         return matchDate && matchSearch;
     });
 
@@ -93,49 +106,167 @@ function renderRequestsTable(list) {
 
     tbody.innerHTML = list.length > 0 ? list.map(r => `
         <tr>
-            <td>${r.date || 'N/A'}</td>
-            <td><b>${r.user}</b><br><small>${r.mobile}</small></td>
-            <td><b>${r.package}</b><br><span style="color:#16a34a;">৳${r.price}</span> (${r.days || 30} দিন)</td>
-            <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:bold;">${r.trx}</code></td>
+            <td>${escapeHTML(r.date || 'N/A')}</td>
+            <td><b>${escapeHTML(r.user)}</b><br><small>${escapeHTML(r.mobile)}</small></td>
+            <td><b>${escapeHTML(r.package)}</b><br><span style="color:#16a34a;">৳${escapeHTML(r.price)}</span> (${r.days} দিন)</td>
+            <td><code>${escapeHTML(r.trx)}</code></td>
             <td>
-                <span style="padding:3px 8px; border-radius:12px; font-size:12px; font-weight:bold; 
+                <span style="padding:3px 8px; border-radius:12px; font-size:12px; font-weight:bold;
                     background:${r.status === 'Approved' ? '#dcfce7' : (r.status === 'Rejected' ? '#fee2e2' : '#fef3c7')};
                     color:${r.status === 'Approved' ? '#166534' : (r.status === 'Rejected' ? '#991b1b' : '#92400e')};">
-                    ${r.status}
+                    ${escapeHTML(r.status)}
                 </span>
             </td>
             <td>
                 ${r.status === 'Pending' ? `
-                    <button onclick="updatePkgStatus(${r.id}, 'Approved', ${r.days || 30})" style="background:#22c55e; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px;">Approve</button>
-                    <button onclick="updatePkgStatus(${r.id}, 'Rejected', 0)" style="background:#ef4444; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px;">Reject</button>
+                    <button onclick="updatePkgStatus(${r.id}, 'Approved', ${r.days})" class="btn btn-success" style="padding:4px 8px; font-size:12px;">Approve</button>
+                    <button onclick="updatePkgStatus(${r.id}, 'Rejected', 0)" class="btn btn-danger" style="padding:4px 8px; font-size:12px;">Reject</button>
                 ` : '<span>সম্পন্ন</span>'}
             </td>
         </tr>
-    `).join('') : '<tr><td colspan="6" style="text-align:center;">কোনো পেমেন্ট রিকোয়েস্ট পাওয়া যায়নি।</td></tr>';
+    `).join('') : '<tr><td colspan="6" style="text-align:center;">কোনো পেমেন্ট রিকোয়েস্ট নেই।</td></tr>';
 }
 
 function updatePkgStatus(reqId, newStatus, durationDays) {
     let requests = JSON.parse(localStorage.getItem('pkgRequests')) || [];
-    const index = requests.findIndex(r => r.id === reqId);
+    const index = requests.findIndex(r => Number(r.id) === Number(reqId));
 
     if (index !== -1) {
         requests[index].status = newStatus;
-
         if(newStatus === 'Approved') {
             let expiryDate = new Date();
             expiryDate.setDate(expiryDate.getDate() + parseInt(durationDays));
-            requests[index].expiryDate = expiryDate.toISOString();
-
-            let activeUserPkg = {
-                packageName: requests[index].package,
-                expiryDate: expiryDate.toISOString(),
-                status: 'Active'
-            };
+            let activeUserPkg = { packageName: requests[index].package, expiryDate: expiryDate.toISOString(), status: 'Active' };
             localStorage.setItem(`userPkg_${requests[index].mobile}`, JSON.stringify(activeUserPkg));
         }
-
         localStorage.setItem('pkgRequests', JSON.stringify(requests));
-        alert(`পেমেন্ট রিকোয়েস্টটি ${newStatus === 'Approved' ? 'এপ্রুভ করা হয়েছে এবং মেয়াদ যুক্ত হয়েছে!' : 'রিজেক্ট করা হয়েছে'}`);
+        alert(`পেমেন্ট ${newStatus === 'Approved' ? 'অনুমোদিত' : 'বাতিল'} করা হয়েছে!`);
         filterRequests();
+    }
+}
+
+// --- 3. Live Exam Setup Logic ---
+function saveLiveExamSetup() {
+    const examData = {
+        title: document.getElementById('examSetupTitle').value.trim(),
+        examLang: document.getElementById('examSetupLang').value,
+        duration: document.getElementById('examSetupDuration').value,
+        passage: document.getElementById('examSetupPassage').value.trim(),
+        passWpm: document.getElementById('examPassWpm').value,
+        passAccuracy: document.getElementById('examPassAccuracy').value,
+        status: document.getElementById('examStatus').value
+    };
+
+    localStorage.setItem('adminExamSetup', JSON.stringify(examData));
+    alert('✅ লাইভ পরীক্ষার সেটিংস সফলভাবে সেভ করা হয়েছে!');
+}
+
+function loadLiveExamSetup() {
+    const examData = JSON.parse(localStorage.getItem('adminExamSetup'));
+    if (!examData) return;
+
+    document.getElementById('examSetupTitle').value = examData.title || '';
+    document.getElementById('examSetupLang').value = examData.examLang || 'bangla';
+    document.getElementById('examSetupDuration').value = examData.duration || 5;
+    document.getElementById('examSetupPassage').value = examData.passage || '';
+    document.getElementById('examPassWpm').value = examData.passWpm || 20;
+    document.getElementById('examPassAccuracy').value = examData.passAccuracy || 80;
+    document.getElementById('examStatus').value = examData.status || 'active';
+}
+
+// --- 4. Notice Board Logic ---
+function postAdminNotice() {
+    const text = document.getElementById('noticeTextInput').value.trim();
+    if(!text) return;
+
+    let notices = JSON.parse(localStorage.getItem('adminNoticeList')) || [];
+    notices.unshift({
+        id: Date.now(),
+        text: text,
+        date: new Date().toLocaleDateString('bn-BD')
+    });
+
+    localStorage.setItem('adminNoticeList', JSON.stringify(notices));
+    document.getElementById('noticeTextInput').value = '';
+    alert('✅ নতুন নোটিশ পোস্ট করা হয়েছে!');
+    renderAdminNotices();
+}
+
+function renderAdminNotices() {
+    let notices = JSON.parse(localStorage.getItem('adminNoticeList')) || [];
+    const container = document.getElementById('adminNoticeArchive');
+    if(!container) return;
+
+    container.innerHTML = notices.length > 0 ? notices.map(n => `
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:6px; margin-top:8px; display:flex; justify-between; align-items:center;">
+            <div>
+                <small style="color:#64748b;">📅 ${escapeHTML(n.date)}</small>
+                <p style="margin-top:3px; font-weight:bold;">${escapeHTML(n.text)}</p>
+            </div>
+            <button onclick="deleteNotice(${n.id})" class="btn btn-danger" style="padding:4px 8px; font-size:12px;">মুছুন</button>
+        </div>
+    `).join('') : '<p style="color:#64748b; margin-top:10px;">কোনো নোটিশ পোস্ট করা হয়নি।</p>';
+}
+
+function deleteNotice(id) {
+    let notices = JSON.parse(localStorage.getItem('adminNoticeList')) || [];
+    notices = notices.filter(n => Number(n.id) !== Number(id));
+    localStorage.setItem('adminNoticeList', JSON.stringify(notices));
+    renderAdminNotices();
+}
+
+// --- 5. User Management Logic ---
+function renderRegisteredUsers() {
+    const users = JSON.parse(localStorage.getItem('usersData')) || {};
+    const tbody = document.getElementById('registeredUsersTable');
+    if(!tbody) return;
+
+    let list = Object.values(users);
+    tbody.innerHTML = list.length > 0 ? list.map((u, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td><b>${escapeHTML(u.fullname)}</b></td>
+            <td><code>${escapeHTML(u.userId)}</code></td>
+            <td>${escapeHTML(u.post || 'N/A')}</td>
+            <td>${escapeHTML(u.mobile || 'N/A')}</td>
+            <td><code>${escapeHTML(u.pass)}</code></td>
+        </tr>
+    `).join('') : '<tr><td colspan="6" style="text-align:center;">কোনো নিবন্ধিত ইউজার নেই।</td></tr>';
+}
+
+// --- 6. Results Logic ---
+function renderAllResults() {
+    const results = JSON.parse(localStorage.getItem('candidateResults')) || [];
+    const tbody = document.getElementById('allCandidateResultsTable');
+    if(!tbody) return;
+
+    tbody.innerHTML = results.length > 0 ? results.map(r => `
+        <tr>
+            <td>${escapeHTML(r.date || 'আজ')}</td>
+            <td><b>${escapeHTML(r.name)}</b> (${escapeHTML(r.userid)})</td>
+            <td>${escapeHTML(r.title || 'লাইভ পরীক্ষা')}</td>
+            <td><b>${escapeHTML(r.wpm)} WPM</b></td>
+            <td>${escapeHTML(r.accuracy)}%</td>
+            <td>
+                <span style="color:${r.status === 'Pass' ? '#16a34a' : '#dc2626'}; font-weight:bold;">
+                    ${escapeHTML(r.status)}
+                </span>
+            </td>
+        </tr>
+    `).join('') : '<tr><td colspan="6" style="text-align:center;">কোনো ফলাফলের ডাটা নেই।</td></tr>';
+}
+
+function toggleResultPublication(status) {
+    localStorage.setItem('isResultPublished', status ? 'true' : 'false');
+    checkResultPubStatus();
+    alert(`ফলাফল ${status ? 'প্রকাশ করা হয়েছে' : 'গোপন/হাইড করা হয়েছে'}!`);
+}
+
+function checkResultPubStatus() {
+    const isPub = localStorage.getItem('isResultPublished') === 'true';
+    const badge = document.getElementById('pubStatusBadge');
+    if(badge) {
+        badge.innerText = isPub ? '(বর্তমান স্ট্যাটাস: প্রকাশিত)' : '(বর্তমান স্ট্যাটাস: গোপন/হাইড)';
+        badge.style.color = isPub ? '#16a34a' : '#dc2626';
     }
 }
