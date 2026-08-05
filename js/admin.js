@@ -1,396 +1,153 @@
-// Admin Panel Core System
+let selectedExam = null;
+let currentCandidate = null;
+let examTimer = null;
+let timeRemaining = 0;
 
-function escapeHTML(str) {
-    if(!str) return '';
-    return String(str).replace(/[&<>"']/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-    });
+function initPortal() {
+    renderAvailableExams();
 }
 
-function switchAdminTab(tabId, element) {
-    document.querySelectorAll('.admin-tab-content').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.admin-menu-list li').forEach(li => li.classList.remove('active'));
-
-    const target = document.getElementById(tabId);
-    if(target) target.classList.add('active');
-    if(element) element.classList.add('active');
-}
-
-function initAdminPanel() {
-    renderPackagesAdmin();
-    filterRequests();
-    loadLiveExamSetup();
-    renderAdminNotices();
-    renderRegisteredUsers();
-    renderAllResults();
-    checkResultPubStatus();
-}
-
-// --- 1. Packages Logic ---
-function addPackageAdmin() {
-    const title = document.getElementById('pkgTitle').value.trim();
-    const price = document.getElementById('pkgPrice').value.trim();
-    const days = document.getElementById('pkgDays').value.trim();
-    const features = document.getElementById('pkgFeatures').value.trim();
-
-    let pkgs = JSON.parse(localStorage.getItem('appPackages')) || [];
-    pkgs.push({
-        id: Date.now(),
-        title: title,
-        price: price,
-        days: parseInt(days),
-        features: features
-    });
-
-    localStorage.setItem('appPackages', JSON.stringify(pkgs));
-    alert('✅ প্যাকেজ যুক্ত হয়েছে!');
-    document.getElementById('pkgTitle').value = '';
-    document.getElementById('pkgPrice').value = '';
-    document.getElementById('pkgDays').value = '';
-    document.getElementById('pkgFeatures').value = '';
-    renderPackagesAdmin();
-}
-
-function renderPackagesAdmin() {
-    let pkgs = JSON.parse(localStorage.getItem('appPackages')) || [];
-    const container = document.getElementById('activePackagesList');
+function renderAvailableExams() {
+    const examList = JSON.parse(localStorage.getItem('adminExamList')) || [];
+    const container = document.getElementById('availableExamsList');
     if(!container) return;
 
-    container.innerHTML = pkgs.length > 0 ? pkgs.map(p => `
-        <div class="pkg-item">
-            <div>
-                <b>${escapeHTML(p.title)}</b> — <span style="color:#16a34a; font-weight:bold;">৳${escapeHTML(p.price)}</span> (${p.days} দিন)
-                <br><small style="color:#64748b;">${escapeHTML(p.features)}</small>
-            </div>
-            <button onclick="deletePackage(${p.id})" class="btn btn-danger" style="padding:5px 10px; font-size:12px;">ডিলিট</button>
+    container.innerHTML = examList.length > 0 ? examList.map(e => `
+        <div class="exam-card-item">
+            <h3>${escapeHTML(e.title)}</h3>
+            <p>⏱️ সময়: ${e.duration} মিনিট | 🌐 ভাষা: ${e.lang}</p>
+            <p><small>পাস করার জন্য WPM: ${e.passWpm} | ব্যাকস্পেস: ${e.backspace === 'yes' ? 'অনুমোদিত' : 'নিষেধ'}</small></p>
+            <button onclick="openVerifyModal(${e.id})" class="btn btn-primary" style="margin-top:10px;">পরীক্ষায় অংশ নিন</button>
         </div>
-    `).join('') : '<p style="color:#64748b; margin-top:10px;">কোনো সক্রিয় প্যাকেজ নেই।</p>';
+    `).join('') : '<p style="color:#64748b;">বর্তমানে কোনো সক্রিয় পরীক্ষা নেই। এডমিন সেটআপ করলে এখানে দেখাবে।</p>';
 }
 
-function deletePackage(id) {
-    if(confirm('প্যাকেজটি মুছে ফেলতে চান?')) {
-        let pkgs = JSON.parse(localStorage.getItem('appPackages')) || [];
-        pkgs = pkgs.filter(p => Number(p.id) !== Number(id));
-        localStorage.setItem('appPackages', JSON.stringify(pkgs));
-        renderPackagesAdmin();
+function openVerifyModal(examId) {
+    const examList = JSON.parse(localStorage.getItem('adminExamList')) || [];
+    selectedExam = examList.find(e => Number(e.id) === Number(examId));
+    document.getElementById('verifyModal').style.display = 'flex';
+}
+
+function closeVerifyModal() {
+    document.getElementById('verifyModal').style.display = 'none';
+}
+
+function verifyAndStartExam() {
+    const userId = document.getElementById('verifyUserId').value.trim();
+    const mobile = document.getElementById('verifyMobile').value.trim();
+    const users = JSON.parse(localStorage.getItem('usersData')) || {};
+
+    if (users[userId] && users[userId].mobile === mobile) {
+        currentCandidate = users[userId];
+        closeVerifyModal();
+        startExamEnvironment();
+    } else {
+        alert("❌ আইডি বা ফোন নম্বর সঠিক নয়! অনুগ্রহ করে সঠিকভাবে নাম ও তথ্য দিয়ে আইডিটি নিশ্চিত করুন।");
     }
 }
 
-// --- 2. Payment Requests Logic ---
-function filterRequests() {
-    const selectedDate = document.getElementById('filterDate').value;
-    const searchQuery = document.getElementById('searchQuery').value.toLowerCase().trim();
-    const requests = JSON.parse(localStorage.getItem('pkgRequests')) || [];
+function startExamEnvironment() {
+    document.getElementById('examSelectView').style.display = 'none';
+    document.getElementById('examAreaView').style.display = 'block';
 
-    let filtered = requests.filter(r => {
-        let matchDate = !selectedDate || (r.rawDate === selectedDate);
-        let matchSearch = !searchQuery || 
-            (r.user && r.user.toLowerCase().includes(searchQuery)) ||
-            (r.mobile && r.mobile.includes(searchQuery)) ||
-            (r.trx && r.trx.toLowerCase().includes(searchQuery));
-        return matchDate && matchSearch;
-    });
+    document.getElementById('exUserId').innerText = currentCandidate.userId;
+    document.getElementById('exUserName').innerText = currentCandidate.fullname;
+    document.getElementById('exUserDistrict').innerText = currentCandidate.district || 'ঢাকা';
+    document.getElementById('currentExamTitle').innerText = selectedExam.title;
 
-    renderRequestsTable(filtered);
+    const passageBox = document.getElementById('a4PassageBox');
+    passageBox.innerText = selectedExam.passage;
+
+    const inputField = document.getElementById('typingInputField');
+    inputField.value = '';
+    inputField.disabled = false;
+    inputField.focus();
+
+    // Disable Backspace if Admin Restricted
+    if (selectedExam.backspace === 'no') {
+        inputField.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace') e.preventDefault();
+        });
+    }
+
+    // Start Timer
+    timeRemaining = selectedExam.duration * 60;
+    runCountdown();
 }
 
-function resetFilter() {
-    document.getElementById('filterDate').value = '';
-    document.getElementById('searchQuery').value = '';
-    filterRequests();
-}
+function runCountdown() {
+    const timerDisplay = document.getElementById('timerCountdown');
+    const a4Paper = document.getElementById('a4Paper');
 
-function renderRequestsTable(list) {
-    const tbody = document.getElementById('adminPkgReqList');
-    if (!tbody) return;
+    examTimer = setInterval(() => {
+        timeRemaining--;
+        let mins = Math.floor(timeRemaining / 60);
+        let secs = timeRemaining % 60;
+        timerDisplay.innerText = `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
 
-    tbody.innerHTML = list.length > 0 ? list.map(r => `
-        <tr>
-            <td>${escapeHTML(r.date || 'N/A')}</td>
-            <td><b>${escapeHTML(r.user)}</b><br><small>${escapeHTML(r.mobile)}</small></td>
-            <td><b>${escapeHTML(r.package)}</b><br><span style="color:#16a34a;">৳${escapeHTML(r.price)}</span> (${r.days} দিন)</td>
-            <td><code>${escapeHTML(r.trx)}</code></td>
-            <td>
-                <span style="padding:3px 8px; border-radius:12px; font-size:12px; font-weight:bold;
-                    background:${r.status === 'Approved' ? '#dcfce7' : (r.status === 'Rejected' ? '#fee2e2' : '#fef3c7')};
-                    color:${r.status === 'Approved' ? '#166534' : (r.status === 'Rejected' ? '#991b1b' : '#92400e')};">
-                    ${escapeHTML(r.status)}
-                </span>
-            </td>
-            <td>
-                ${r.status === 'Pending' ? `
-                    <button onclick="updatePkgStatus(${r.id}, 'Approved', ${r.days})" class="btn btn-success" style="padding:4px 8px; font-size:12px;">Approve</button>
-                    <button onclick="updatePkgStatus(${r.id}, 'Rejected', 0)" class="btn btn-danger" style="padding:4px 8px; font-size:12px;">Reject</button>
-                ` : '<span>সম্পন্ন</span>'}
-            </td>
-        </tr>
-    `).join('') : '<tr><td colspan="6" style="text-align:center;">কোনো পেমেন্ট রিকোয়েস্ট নেই।</td></tr>';
-}
-
-function updatePkgStatus(reqId, newStatus, durationDays) {
-    let requests = JSON.parse(localStorage.getItem('pkgRequests')) || [];
-    const index = requests.findIndex(r => Number(r.id) === Number(reqId));
-
-    if (index !== -1) {
-        requests[index].status = newStatus;
-        if(newStatus === 'Approved') {
-            let expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + parseInt(durationDays));
-            let activeUserPkg = { packageName: requests[index].package, expiryDate: expiryDate.toISOString(), status: 'Active' };
-            localStorage.setItem(`userPkg_${requests[index].mobile}`, JSON.stringify(activeUserPkg));
+        // Color Change Alert in Last 1 Minute
+        if (timeRemaining <= 60) {
+            a4Paper.classList.add('warning-color');
         }
-        localStorage.setItem('pkgRequests', JSON.stringify(requests));
-        alert(`পেমেন্ট ${newStatus === 'Approved' ? 'অনুমোদিত' : 'বাতিল'} করা হয়েছে!`);
-        filterRequests();
+
+        if (timeRemaining <= 0) {
+            clearInterval(examTimer);
+            alert('⏰ নির্ধারিত সময় শেষ! আপনার উত্তর স্বয়ংক্রিয়ভাবে জমা নেওয়া হচ্ছে।');
+            finishExamAndCalculate();
+        }
+    }, 1000);
+}
+
+function finishExamAndCalculate() {
+    clearInterval(examTimer);
+    const inputField = document.getElementById('typingInputField');
+    inputField.disabled = true;
+
+    const typedText = inputField.value.trim();
+    const originalText = selectedExam.passage.trim();
+
+    // Calculate WPM and Accuracy
+    const wordsTyped = typedText.length > 0 ? typedText.split(/\s+/).length : 0;
+    const timeSpentMinutes = (selectedExam.duration * 60 - timeRemaining) / 60 || 1;
+    const wpm = Math.round(wordsTyped / timeSpentMinutes);
+
+    let correctChars = 0;
+    for(let i = 0; i < Math.min(typedText.length, originalText.length); i++) {
+        if(typedText[i] === originalText[i]) correctChars++;
     }
-}
+    const accuracy = typedText.length > 0 ? Math.round((correctChars / typedText.length) * 100) : 0;
 
-// --- 3. Live Exam Setup Logic ---
-function saveLiveExamSetup() {
-    const examData = {
-        title: document.getElementById('examSetupTitle').value.trim(),
-        examLang: document.getElementById('examSetupLang').value,
-        duration: document.getElementById('examSetupDuration').value,
-        passage: document.getElementById('examSetupPassage').value.trim(),
-        passWpm: document.getElementById('examPassWpm').value,
-        passAccuracy: document.getElementById('examPassAccuracy').value,
-        status: document.getElementById('examStatus').value
-    };
+    const isPassed = wpm >= selectedExam.passWpm && accuracy >= selectedExam.passAccuracy;
+    const resultStatus = isPassed ? 'পাস (Passed)' : 'ফেল (Failed)';
 
-    localStorage.setItem('adminExamSetup', JSON.stringify(examData));
-    alert('✅ লাইভ পরীক্ষার সেটিংস সফলভাবে সেভ করা হয়েছে!');
-}
-
-function loadLiveExamSetup() {
-    const examData = JSON.parse(localStorage.getItem('adminExamSetup'));
-    if (!examData) return;
-
-    document.getElementById('examSetupTitle').value = examData.title || '';
-    document.getElementById('examSetupLang').value = examData.examLang || 'bangla';
-    document.getElementById('examSetupDuration').value = examData.duration || 5;
-    document.getElementById('examSetupPassage').value = examData.passage || '';
-    document.getElementById('examPassWpm').value = examData.passWpm || 20;
-    document.getElementById('examPassAccuracy').value = examData.passAccuracy || 80;
-    document.getElementById('examStatus').value = examData.status || 'active';
-}
-
-// --- 4. Notice Board Logic ---
-function postAdminNotice() {
-    const text = document.getElementById('noticeTextInput').value.trim();
-    if(!text) return;
-
-    let notices = JSON.parse(localStorage.getItem('adminNoticeList')) || [];
-    notices.unshift({
-        id: Date.now(),
-        text: text,
-        date: new Date().toLocaleDateString('bn-BD')
-    });
-
-    localStorage.setItem('adminNoticeList', JSON.stringify(notices));
-    document.getElementById('noticeTextInput').value = '';
-    alert('✅ নতুন নোটিশ পোস্ট করা হয়েছে!');
-    renderAdminNotices();
-}
-
-function renderAdminNotices() {
-    let notices = JSON.parse(localStorage.getItem('adminNoticeList')) || [];
-    const container = document.getElementById('adminNoticeArchive');
-    if(!container) return;
-
-    container.innerHTML = notices.length > 0 ? notices.map(n => `
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:6px; margin-top:8px; display:flex; justify-between; align-items:center;">
-            <div>
-                <small style="color:#64748b;">📅 ${escapeHTML(n.date)}</small>
-                <p style="margin-top:3px; font-weight:bold;">${escapeHTML(n.text)}</p>
-            </div>
-            <button onclick="deleteNotice(${n.id})" class="btn btn-danger" style="padding:4px 8px; font-size:12px;">মুছুন</button>
-        </div>
-    `).join('') : '<p style="color:#64748b; margin-top:10px;">কোনো নোটিশ পোস্ট করা হয়নি।</p>';
-}
-
-function deleteNotice(id) {
-    let notices = JSON.parse(localStorage.getItem('adminNoticeList')) || [];
-    notices = notices.filter(n => Number(n.id) !== Number(id));
-    localStorage.setItem('adminNoticeList', JSON.stringify(notices));
-    renderAdminNotices();
-}
-
-// --- 5. User Management Logic ---
-function renderRegisteredUsers() {
-    const users = JSON.parse(localStorage.getItem('usersData')) || {};
-    const tbody = document.getElementById('registeredUsersTable');
-    if(!tbody) return;
-
-    let list = Object.values(users);
-    tbody.innerHTML = list.length > 0 ? list.map((u, i) => `
-        <tr>
-            <td>${i + 1}</td>
-            <td><b>${escapeHTML(u.fullname)}</b></td>
-            <td><code>${escapeHTML(u.userId)}</code></td>
-            <td>${escapeHTML(u.post || 'N/A')}</td>
-            <td>${escapeHTML(u.mobile || 'N/A')}</td>
-            <td><code>${escapeHTML(u.pass)}</code></td>
-        </tr>
-    `).join('') : '<tr><td colspan="6" style="text-align:center;">কোনো নিবন্ধিত ইউজার নেই।</td></tr>';
-}
-
-// --- 6. Results Logic ---
-function renderAllResults() {
-    const results = JSON.parse(localStorage.getItem('candidateResults')) || [];
-    const tbody = document.getElementById('allCandidateResultsTable');
-    if(!tbody) return;
-
-    tbody.innerHTML = results.length > 0 ? results.map(r => `
-        <tr>
-            <td>${escapeHTML(r.date || 'আজ')}</td>
-            <td><b>${escapeHTML(r.name)}</b> (${escapeHTML(r.userid)})</td>
-            <td>${escapeHTML(r.title || 'লাইভ পরীক্ষা')}</td>
-            <td><b>${escapeHTML(r.wpm)} WPM</b></td>
-            <td>${escapeHTML(r.accuracy)}%</td>
-            <td>
-                <span style="color:${r.status === 'Pass' ? '#16a34a' : '#dc2626'}; font-weight:bold;">
-                    ${escapeHTML(r.status)}
-                </span>
-            </td>
-        </tr>
-    `).join('') : '<tr><td colspan="6" style="text-align:center;">কোনো ফলাফলের ডাটা নেই।</td></tr>';
-}
-
-function toggleResultPublication(status) {
-    localStorage.setItem('isResultPublished', status ? 'true' : 'false');
-    checkResultPubStatus();
-    alert(`ফলাফল ${status ? 'প্রকাশ করা হয়েছে' : 'গোপন/হাইড করা হয়েছে'}!`);
-}
-
-function checkResultPubStatus() {
-    const isPub = localStorage.getItem('isResultPublished') === 'true';
-    const badge = document.getElementById('pubStatusBadge');
-    if(badge) {
-        badge.innerText = isPub ? '(বর্তমান স্ট্যাটাস: প্রকাশিত)' : '(বর্তমান স্ট্যাটাস: গোপন/হাইড)';
-        badge.style.color = isPub ? '#16a34a' : '#dc2626';
-    }
-}
-function escapeHTML(str) {
-    if(!str) return '';
-    return String(str).replace(/[&<>"']/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-    });
-}
-
-function switchAdminTab(tabId, element) {
-    document.querySelectorAll('.admin-tab-content').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.admin-menu-list li').forEach(li => li.classList.remove('active'));
-
-    const target = document.getElementById(tabId);
-    if(target) target.classList.add('active');
-    if(element) element.classList.add('active');
-}
-
-function initAdminPanel() {
-    renderAdminExamList();
-    renderAllResultsLeaderboard();
-    renderPackagesAdmin();
-    filterRequests();
-    renderAdminNotices();
-    renderRegisteredUsers();
-}
-
-// Save Exam Setup to Array
-function saveLiveExamSetup() {
-    const title = document.getElementById('examSetupTitle').value.trim();
-    const lang = document.getElementById('examSetupLang').value;
-    const duration = parseInt(document.getElementById('examSetupDuration').value);
-    const passage = document.getElementById('examSetupPassage').value.trim();
-    const backspace = document.getElementById('allowBackspace').value;
-    const highlight = document.getElementById('allowHighlight').value;
-    const passWpm = parseInt(document.getElementById('examPassWpm').value);
-    const passAccuracy = parseInt(document.getElementById('examPassAccuracy').value);
-
-    let examList = JSON.parse(localStorage.getItem('adminExamList')) || [];
-    examList.push({
-        id: Date.now(),
-        title, lang, duration, passage, backspace, highlight, passWpm, passAccuracy
-    });
-
-    localStorage.setItem('adminExamList', JSON.stringify(examList));
-    alert('✅ পরীক্ষাটি সফলভাবে তালিকায় যুক্ত করা হয়েছে!');
-    renderAdminExamList();
-}
-
-function renderAdminExamList() {
-    let examList = JSON.parse(localStorage.getItem('adminExamList')) || [];
-    const container = document.getElementById('adminExamList');
-    if(!container) return;
-
-    container.innerHTML = examList.length > 0 ? examList.map((e, index) => `
-        <div class="pkg-item">
-            <div>
-                <b>${index + 1}. ${escapeHTML(e.title)}</b> (${e.duration} মিনিট | ${e.lang})
-                <br><small style="color:#64748b;">ব্যাকস্পেস: ${e.backspace === 'yes' ? 'চালু' : 'বন্ধ'} | হাইলাইট: ${e.highlight === 'yes' ? 'চালু' : 'বন্ধ'} | পাস WPM: ${e.passWpm}</small>
-            </div>
-            <button onclick="deleteExam(${e.id})" class="btn btn-danger" style="padding:5px 10px; font-size:12px;">ডিলিট</button>
-        </div>
-    `).join('') : '<p style="color:#64748b; margin-top:10px;">কোনো পরীক্ষা সেটিং করা নেই।</p>';
-}
-
-function deleteExam(id) {
-    if(confirm('পরীক্ষাটি তালিকা থেকে মুছে ফেলতে চান?')) {
-        let examList = JSON.parse(localStorage.getItem('adminExamList')) || [];
-        examList = examList.filter(e => Number(e.id) !== Number(id));
-        localStorage.setItem('adminExamList', JSON.stringify(examList));
-        renderAdminExamList();
-    }
-}
-
-// Render Results with Rank / Leaderboard
-function renderAllResultsLeaderboard() {
+    // Save to LocalStorage
     let results = JSON.parse(localStorage.getItem('candidateResults')) || [];
-    const tbody = document.getElementById('allCandidateResultsTable');
-    if(!tbody) return;
+    const newResult = {
+        id: Date.now(),
+        name: currentCandidate.fullname,
+        userId: currentCandidate.userId,
+        district: currentCandidate.district || 'ঢাকা',
+        mobile: currentCandidate.mobile,
+        examTitle: selectedExam.title,
+        wpm: wpm,
+        accuracy: accuracy,
+        status: resultStatus,
+        date: new Date().toLocaleDateString('bn-BD')
+    };
+    results.push(newResult);
+    localStorage.setItem('candidateResults', JSON.stringify(results));
 
-    // Sort by WPM descending for rank/leaderboard
-    results.sort((a, b) => b.wpm - a.wpm || b.accuracy - a.accuracy);
+    // Show Result View
+    document.getElementById('examAreaView').style.display = 'none';
+    document.getElementById('resultAreaView').style.display = 'block';
 
-    tbody.innerHTML = results.length > 0 ? results.map((r, i) => `
-        <tr>
-            <td><b style="color:#0284c7;">#${i + 1}</b></td>
-            <td><b>${escapeHTML(r.name)}</b><br><small>${escapeHTML(r.userId)}</small></td>
-            <td>${escapeHTML(r.district || 'N/A')}</td>
-            <td>${escapeHTML(r.mobile || 'N/A')}</td>
-            <td><b>${r.wpm} WPM</b></td>
-            <td>${r.accuracy}%</td>
-            <td>
-                <span style="color:${r.status === 'পাস (Passed)' ? '#16a34a' : '#dc2626'}; font-weight:bold;">
-                    ${escapeHTML(r.status)}
-                </span>
-            </td>
-            <td><small>${escapeHTML(r.date)}</small></td>
-        </tr>
-    `).join('') : '<tr><td colspan="8" style="text-align:center;">কোনো ফলাফলের ডাটা নেই।</td></tr>';
-}
-
-function toggleResultPublication(status) {
-    localStorage.setItem('isResultPublished', status ? 'true' : 'false');
-    const badge = document.getElementById('pubStatusBadge');
-    if(badge) {
-        badge.innerText = status ? '(স্ট্যাটাস: প্রকাশিত)' : '(স্ট্যাটাস: গোপন)';
-        badge.style.color = status ? '#16a34a' : '#dc2626';
-    }
-    alert(`ফলাফল ${status ? 'প্রকাশ' : 'গোপন'} করা হয়েছে!`);
-}
-
-// General Utilities
-function addPackageAdmin() { /* Standard Logic */ }
-function renderPackagesAdmin() { /* Standard Logic */ }
-function filterRequests() { /* Standard Logic */ }
-function renderAdminNotices() { /* Standard Logic */ }
-function postAdminNotice() { /* Standard Logic */ }
-function renderRegisteredUsers() {
-    const users = JSON.parse(localStorage.getItem('usersData')) || {};
-    const tbody = document.getElementById('registeredUsersTable');
-    if(!tbody) return;
-    let list = Object.values(users);
-    tbody.innerHTML = list.map((u, i) => `
-        <tr><td>${i+1}</td><td><b>${escapeHTML(u.fullname)}</b></td><td><code>${escapeHTML(u.userId)}</code></td><td>${escapeHTML(u.district || 'ঢাকা')}</td><td>${escapeHTML(u.mobile)}</td></tr>
-    `).join('');
+    document.getElementById('resultDetailsBox').innerHTML = `
+        <div style="font-size:18px; line-height:1.8;">
+            <p><b>परीक्षार्थी:</b> ${currentCandidate.fullname} (${currentCandidate.userId})</p>
+            <p><b>জেলা:</b> ${currentCandidate.district || 'ঢাকা'}</p>
+            <p><b>গতি (Speed):</b> <span style="color:#0284c7; font-size:22px; font-weight:bold;">${wpm} WPM</span></p>
+            <p><b>নির্ভুলতা (Accuracy):</b> <b>${accuracy}%</b></p>
+            <p><b>ফলাফল:</b> <span style="color:${isPassed ? '#16a34a' : '#dc2626'}; font-weight:bold; font-size:20px;">${resultStatus}</span></p>
+        </div>
+    `;
 }
