@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Govt Job Typing Test & Practice Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body class="portal-container">
+
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleMenu()"></div>
+
+<div class="side-drawer" id="sideDrawer">
+    <div class="drawer-header">
+        <a href="user-profile.html" style="text-decoration: none; color: white; display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <img id="userAvatar" src="https://via.placeholder.com/40" alt="Profile" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover;">
+            <span id="navUserName">প্রার্থী</span>
+        </a>
+        <span onclick="toggleMenu()" style="cursor:pointer; font-size: 20px;">&times;</span>
+    </div>
+    <ul class="drawer-menu">
+        <li><a href="#" onclick="switchPortal('practice'); toggleMenu();">⌨️ Practice Portal</a></li>
+        <li><a href="#" onclick="switchPortal('exam'); toggleMenu();">📝 Exam Portal</a></li>
+        <li><a href="#" onclick="showTab('packagesTab'); toggleMenu();"><i class="fas fa-box-open"></i> প্যাকেজসমূহ</a></li>
+        <li><a href="#" onclick="showTab('resultsTab'); toggleMenu();"><i class="fas fa-trophy"></i> রেজাল্ট & মেধা তালিকা</a></li>
+        <li><a href="#" onclick="showTab('noticeboardTab'); toggleMenu();"><i class="fas fa-bullhorn"></i> নোটিশ বোর্ড</a></li>
+        <li><a href="#" onclick="showTab('supportTab'); toggleMenu();"><i class="fas fa-headset"></i> সাপোর্ট কেন্দ্র</a></li>
+        <li><a href="#" onclick="logoutUser()" style="color: #dc3545;">🚪 Logout</a></li>
+    </ul>
+</div>
+
+<div class="top-corner-bar">
+    <button class="hamburger-btn" onclick="toggleMenu()">☰ মেনু</button>
+</div>
+
+<div id="noticeBoardBox" style="background: #1e293b; color: #fff; padding: 8px 15px; border-radius: 6px; width:100%; max-width:850px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; flex-grow: 1; overflow: hidden; white-space: nowrap;">
+        <span style="background: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; margin-right: 10px;">📢 নোটিশ</span>
+        <marquee id="noticeMarquee" behavior="scroll" direction="left" scrollamount="5" style="font-size: 14px; color: #f8fafc;">
+            কোনো নতুন নোটিশ নেই।
+        </marquee>
+    </div>
+    <button onclick="dismissNotice()" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; margin-left: 10px;">&times;</button>
+</div>
+
+<!-- PRACTICE PORTAL -->
+<div id="practice-portal-section" class="tab-content" style="display: block;">
+    <div class="a4-page">
+        <h2 style="text-align: center; color: #1e293b; font-size: 18px;">⌨️ টাইপিং প্র্যাকটিস পোর্টাল</h2>
+
+        <div class="prac-controls">
+            <div>
+                <label><input type="radio" name="prac-mode" value="bn" onclick="selectPracMode('bn')" checked> বাংলা</label> &nbsp;
+                <label><input type="radio" name="prac-mode" value="en" onclick="selectPracMode('en')"> English</label>
+            </div>
+            <div>
+                <label>সময় (মি.): </label>
+                <input type="number" id="pracTimeInput" min="1" max="60" value="1" style="width:50px; padding: 2px 5px;" onchange="resetPracText()">
+            </div>
+            <div>
+                <button onclick="resetPracText()" style="background:#8e44ad; color:#fff; border:none; padding:4px 10px; border-radius:4px; cursor:pointer;">🔄 পরিবর্তন করুন</button>
+            </div>
+        </div>
+
+        <div id="pracTextDisplay" class="prac-text-display"></div>
+
+        <div style="position: relative;">
+            <div id="pracActionArea" style="position: absolute; top: 35%; left: 38%; z-index: 10;">
+                <button id="pracStartBtn" onclick="startPracTest()" style="background: #27ae60; color: white; border: none; padding: 12px 28px; font-size: 15px; font-weight: bold; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">Start Practice</button>
+            </div>
+            <textarea id="pracTypingInput" class="prac-typing-input" placeholder="অনুশীলন শুরু করতে 'Start Practice' বাটনে চাপুন..." disabled oninput="handlePracTyping()"></textarea>
+        </div>
+
+        <div class="prac-stats">
+            <div>সময় বাকি: <span id="pracTimer">01:00</span></div>
+            <div>গতি (WPM): <span id="pracWpm">0</span></div>
+            <div>নির্ভুলতা: <span id="pracAccuracy">100</span>%</div>
+        </div>
+    </div>
+</div>
+
+<!-- EXAM PORTAL -->
+<div id="exam-portal-section" class="tab-content" style="display: none;">
+    <div class="a4-page">
+        <h2 style="text-align: center; color: #dc2626; font-size: 18px;">📝 সরকারি চাকরি লাইভ টাইপিং পরীক্ষা</h2>
+        <div id="examContainer"></div>
+    </div>
+</div>
+
+<!-- PACKAGES TAB -->
+<div id="packagesTab" class="tab-content" style="display:none; background:#fff; padding:20px; border-radius:8px;">
+    <h2>📦 উপলব্ধ প্যাকেজসমূহ</h2>
+    <div id="userPackagesContainer" style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;"></div>
+</div>
+
+<!-- RESULTS TAB -->
+<div id="resultsTab" class="tab-content" style="display:none; background:#fff; padding:20px; border-radius:8px;">
+    <h2>🏆 পরীক্ষার ফলাফল ও মেধা তালিকা</h2>
+    <p id="resultStatusMessage" style="margin-top: 10px; font-weight:bold;"></p>
+    <table id="resultTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>ক্রম</th>
+                <th>পরীক্ষার্থীর নাম</th>
+                <th>স্পিড ও একুরেসি</th>
+                <th>তারিখ</th>
+            </tr>
+        </thead>
+        <tbody id="userResultList"></tbody>
+    </table>
+</div>
+
+<!-- NOTICES TAB -->
+<div id="noticeboardTab" class="tab-content" style="display:none; background:#fff; padding:20px; border-radius:8px;">
+    <h2>📜 সকল অফিশিয়াল নোটিশ</h2>
+    <div id="fullNoticeList" style="margin-top: 15px;"></div>
+</div>
+
+<!-- SUPPORT TAB -->
+<div id="supportTab" class="tab-content" style="display:none; background:#fff; padding:20px; border-radius:8px;">
+    <h2>🎧 হেল্প & সাপোর্ট কেন্দ্র</h2>
+    <p style="margin-top:5px; font-size:14px; color:#666;">যে কোনো সমস্যায় নিচের লিংকগুলোর মাধ্যমে আমাদের সাথে যোগাযোগ করুন:</p>
+    <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+        <a id="linkFbPage" href="#" target="_blank" style="padding: 10px 15px; background: #1877f2; color: #fff; text-decoration: none; border-radius: 4px; font-weight:bold;"><i class="fab fa-facebook"></i> Facebook Page</a>
+        <a id="linkFbGroup" href="#" target="_blank" style="padding: 10px 15px; background: #0666da; color: #fff; text-decoration: none; border-radius: 4px; font-weight:bold;"><i class="fab fa-facebook-square"></i> Facebook Group</a>
+        <a id="linkWa" href="#" target="_blank" style="padding: 10px 15px; background: #25D366; color: #fff; text-decoration: none; border-radius: 4px; font-weight:bold;"><i class="fab fa-whatsapp"></i> WhatsApp Group</a>
+        <a id="linkTg" href="#" target="_blank" style="padding: 10px 15px; background: #0088cc; color: #fff; text-decoration: none; border-radius: 4px; font-weight:bold;"><i class="fab fa-telegram"></i> Telegram Channel</a>
+    </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/typing.js"></script>
+<script>
+    window.onload = function() {
+        checkAuthGuard();
+        syncUserDataUI();
+        loadAdminNotices();
+        resetPracText();
+    };
+
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'adminNoticeList') loadAdminNotices();
+        if (e.key === 'adminExamSetup') checkLiveExam();
+        if (e.key === 'isResultPublished') checkAndShowResult();
+    });
+</script>
+</body>
+</html>
