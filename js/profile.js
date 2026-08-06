@@ -1,10 +1,11 @@
-// User Profile Operations
+// User Profile Operations (Fixed Storage Limit)
+
 function loadUserProfile() {
     let loggedInUser = JSON.parse(sessionStorage.getItem('loggedInUser')) || JSON.parse(localStorage.getItem('loggedInUser')) || {};
     let userId = loggedInUser.userId || "N/A";
     let savedExams = JSON.parse(localStorage.getItem(`userHistory_${userId}`)) || [];
     
-    let avatarImage = localStorage.getItem('userSavedAvatar') || localStorage.getItem('profile_avatar') || "";
+    let avatarImage = localStorage.getItem(`userAvatar_${userId}`) || "";
 
     let name = loggedInUser.fullname || "প্রার্থী";
     let post = loggedInUser.post || "কম্পিউটার অপারেটর";
@@ -31,7 +32,7 @@ function loadUserProfile() {
         document.getElementById('pkg-title').innerText = "কোনো অ্যাক্টিভ প্যাকেজ নেই";
         document.getElementById('pkg-status-badge').innerText = 'ইনঅ্যাক্টিভ';
         document.getElementById('pkg-status-badge').style.color = 'var(--danger)';
-        document.getElementById('pkg-expiry').innerText = "মেয়াদ উত্তীর্ণ বা কেনা হয়নি";
+        document.getElementById('pkg-expiry').innerText = "মেয়াদ উত্তীর্ণ বা কেনা হয়নি";
     }
 
     const avatarImg = document.getElementById('profile-avatar-img');
@@ -40,13 +41,15 @@ function loadUserProfile() {
     if (avatarImage) {
         avatarImg.src = avatarImage;
         avatarImg.style.display = 'block';
-        initialsDiv.style.display = 'none';
+        if(initialsDiv) initialsDiv.style.display = 'none';
     } else {
         let nameParts = name.trim().split(' ');
         let initials = nameParts.length > 1 ? (nameParts[0][0] + nameParts[1][0]) : nameParts[0][0];
-        initialsDiv.innerText = initials ? initials.toUpperCase() : "US";
-        initialsDiv.style.display = 'flex';
-        avatarImg.style.display = 'none';
+        if(initialsDiv) {
+            initialsDiv.innerText = initials ? initials.toUpperCase() : "US";
+            initialsDiv.style.display = 'flex';
+        }
+        if(avatarImg) avatarImg.style.display = 'none';
     }
 
     const totalExams = savedExams.length;
@@ -60,10 +63,11 @@ function loadUserProfile() {
     document.getElementById('stat-highest').innerText = highestWpm + " WPM";
 
     const historyList = document.getElementById('exam-history-list');
+    if(!historyList) return;
     historyList.innerHTML = '';
 
     if (totalExams === 0) {
-        historyList.innerHTML = `<div class="empty-state"><i class="fa-solid fa-folder-open" style="font-size: 32px; margin-bottom: 10px; display: block;"></i> আপনি এখনও কোনো পরীক্ষায় অংশ নেননি। পরীক্ষা দিতে এক্সাম পোর্টালে যান!</div>`;
+        historyList.innerHTML = `<div class="empty-state"><i class="fa-solid fa-folder-open" style="font-size: 32px; margin-bottom: 10px; display: block;"></i> আপনি এখনও কোনো পরীক্ষায় অংশ নেননি। পরীক্ষা দিতে এক্সাম পোর্টালে যান!</div>`;
         return;
     }
 
@@ -79,17 +83,17 @@ function loadUserProfile() {
                         <i class="fa-solid ${iconSymbol}"></i>
                     </div>
                     <div class="history-details">
-                        <h4>${exam.title || 'টাইপিং টেস্ট পরীক্ষা'}</h4>
-                        <span><i class="fa-regular fa-calendar"></i> ${exam.date || 'সাম্প্রতিক'}</span>
+                        <h4>${escapeHTML(exam.title || 'টাইপিং টেস্ট পরীক্ষা')}</h4>
+                        <span><i class="fa-regular fa-calendar"></i> ${escapeHTML(exam.date || 'সাম্প্রতিক')}</span>
                     </div>
                 </div>
                 <div class="history-right">
                     <div class="metric-badge">
-                        <div class="val">${exam.wpm || 0} WPM</div>
+                        <div class="val">${escapeHTML(exam.wpm || 0)} WPM</div>
                         <div class="lbl">গতি</div>
                     </div>
                     <div class="metric-badge">
-                        <div class="val">${exam.accuracy || 0}%</div>
+                        <div class="val">${escapeHTML(exam.accuracy || 0)}%</div>
                         <div class="lbl">নির্ভুলতা</div>
                     </div>
                     <span class="status-pill ${iconClass}">${isPass ? 'PASSED' : 'FAILED'}</span>
@@ -102,11 +106,21 @@ function loadUserProfile() {
 function uploadAvatar(event) {
     const file = event.target.files[0];
     if (file) {
+        if(file.size > 1024 * 1024) {
+            return alert("⚠️ ফাইলের সাইজ ১ মেগাবাইটের বেশি হতে পারবে না!");
+        }
+
+        let loggedInUser = JSON.parse(sessionStorage.getItem('loggedInUser')) || JSON.parse(localStorage.getItem('loggedInUser')) || {};
+        let userId = loggedInUser.userId || "guest";
+
         const reader = new FileReader();
         reader.onload = function(e) {
-            localStorage.setItem('userSavedAvatar', e.target.result);
-            localStorage.setItem('profile_avatar', e.target.result);
-            loadUserProfile();
+            try {
+                localStorage.setItem(`userAvatar_${userId}`, e.target.result);
+                loadUserProfile();
+            } catch (err) {
+                alert("⚠️ স্টোরেজ পূর্ণ হয়ে গেছে! দয়া করে ছোট সাইজের ছবি ব্যবহার করুন।");
+            }
         };
         reader.readAsDataURL(file);
     }
