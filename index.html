@@ -1,179 +1,96 @@
 <!DOCTYPE html>
-
 <html lang="bn">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>লগইন - সরকারি চাকরি টাইপিং টেস্ট পোর্টাল</title>
-
-    <link rel="stylesheet" href="css/main.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>লগইন - সরকারি চাকরি টাইপিং টেস্ট পোর্টাল</title>
+    <link rel="stylesheet" href="css/main.css">
 </head>
-
 <body class="login-body">
 
-
-
 <div class="login-card">
+    <h2>টাইপিং টেস্ট পোর্টাল</h2>
+    <p>পরীক্ষার্থীর লগইন প্যানেল</p>
 
-    <h2>টাইপিং টেস্ট পোর্টাল</h2>
-
-    <p>পরীক্ষার্থীর লগইন প্যানেল</p>
-
-
-
-<form id="loginForm" onsubmit="handleLogin(event)">
-    <div class="form-group">
-        <label for="username">ইউজার আইডি / রোল নম্বর</label>
-        <input type="text" id="username" placeholder="User ID বা Roll দিন" required>
-    </div>
-    <div class="form-group">
-        <label for="password">পাসওয়ার্ড</label>
-        <input type="password" id="password" placeholder="Password দিন" required>
-    </div>
-    <button type="submit" class="btn-action">লগইন করুন</button>
-    <div id="login-error" class="msg-box error-msg" style="display:none; color:red; margin-top:10px;">
-        ❌ ভুল ইউজার আইডি অথবা পাসওয়ার্ড!
-    </div>
+   <form id="loginForm" onsubmit="handleLogin(event)">
+    <div class="form-group">
+        <label for="username">ইউজার আইডি / রোল নম্বর</label>
+        <input type="text" id="username" placeholder="User ID বা Roll দিন" required>
+    </div>
+    <div class="form-group">
+        <label for="password">পাসওয়ার্ড</label>
+        <input type="password" id="password" placeholder="Password দিন" required>
+    </div>
+    <button type="submit" class="btn-action">লগইন করুন</button>
+    <div id="login-error" class="msg-box error-msg" style="display:none; color:red; margin-top:10px;">
+        ❌ ভুল ইউজার আইডি অথবা পাসওয়ার্ড!
+    </div>
 </form>
 
-
-
-    <div class="extra-links">
-
-        <a onclick="openModal('forgotModal')">পাসওয়ার্ড ভুলে গেছেন?</a>
-
-        <a onclick="openModal('registerModal')">নতুন একাউন্ট খুলুন</a>
-
-    </div>
-
+    <div class="extra-links">
+        <a onclick="openModal('forgotModal')">পাসওয়ার্ড ভুলে গেছেন?</a>
+        <a onclick="openModal('registerModal')">নতুন একাউন্ট খুলুন</a>
+    </div>
 </div>
-
-
 
 <!-- REGISTRATION MODAL -->
-
 <div class="modal-overlay" id="registerModal">
-
-    <div class="modal-box">
-
-        <span class="close-btn" onclick="closeModal('registerModal')">&times;</span>
-
-        <h3>চাকরি প্রার্থীর অ্যাকাউন্ট নিবন্ধন</h3>
-
-        <form onsubmit="handleRegister(event)">
-
-            <div class="form-group">
-
-                <label>আবেদনকারীর নাম (Full Name)</label>
-
-                <input type="text" id="reg-fullname" placeholder="আপনার পূর্ণ নাম লিখুন" required>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>আবেদনকৃত পদ (Post Name)</label>
-
-                <select id="reg-post" required>
-
-                    <option value="">-- পদ নির্বাচন করুন --</option>
-
-                    <option value="কম্পিউটার অপারেটর">কম্পিউটার অপারেটর</option>
-
-                    <option value="সাঁটমুদ্রাক্ষরিক কাম কম্পিউটার অপারেটর">সাঁটমুদ্রাক্ষরিক কাম কম্পিউটার অপারেটর</option>
-
-                    <option value="অফিস সহকারী কাম কম্পিউটার মুদ্রাক্ষরিক">অফিস সহকারী কাম কম্পিউটার মুদ্রাক্ষরিক</option>
-
-                </select>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>মোবাইল নম্বর (Mobile No)</label>
-
-                <input type="tel" id="reg-mobile" placeholder="017XXXXXXXX" pattern="[0-9]{11}" required>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>ইউজার আইডি / রোল (User ID/Roll)</label>
-
-                <input type="text" id="reg-username" placeholder="User ID দিন" required>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>পাসওয়ার্ড (Password)</label>
-
-                <input type="password" id="reg-password" placeholder="Password দিন" required>
-
-            </div>
-
-            <button type="submit" class="btn-action" style="background: #28a745;">অ্যাকাউন্ট তৈরি করুন</button>
-
-        </form>
-
-    </div>
-
+    <div class="modal-box">
+        <span class="close-btn" onclick="closeModal('registerModal')">&times;</span>
+        <h3>চাকরি প্রার্থীর অ্যাকাউন্ট নিবন্ধন</h3>
+        <form onsubmit="handleRegister(event)">
+            <div class="form-group">
+                <label>আবেদনকারীর নাম (Full Name)</label>
+                <input type="text" id="reg-fullname" placeholder="আপনার পূর্ণ নাম লিখুন" required>
+            </div>
+            <div class="form-group">
+                <label>আবেদনকৃত পদ (Post Name)</label>
+                <select id="reg-post" required>
+                    <option value="">-- পদ নির্বাচন করুন --</option>
+                    <option value="কম্পিউটার অপারেটর">কম্পিউটার অপারেটর</option>
+                    <option value="সাঁটমুদ্রাক্ষরিক কাম কম্পিউটার অপারেটর">সাঁটমুদ্রাক্ষরিক কাম কম্পিউটার অপারেটর</option>
+                    <option value="অফিস সহকারী কাম কম্পিউটার মুদ্রাক্ষরিক">অফিস সহকারী কাম কম্পিউটার মুদ্রাক্ষরিক</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>মোবাইল নম্বর (Mobile No)</label>
+                <input type="tel" id="reg-mobile" placeholder="017XXXXXXXX" pattern="[0-9]{11}" required>
+            </div>
+            <div class="form-group">
+                <label>ইউজার আইডি / রোল (User ID/Roll)</label>
+                <input type="text" id="reg-username" placeholder="User ID দিন" required>
+            </div>
+            <div class="form-group">
+                <label>পাসওয়ার্ড (Password)</label>
+                <input type="password" id="reg-password" placeholder="Password দিন" required>
+            </div>
+            <button type="submit" class="btn-action" style="background: #28a745;">অ্যাকাউন্ট তৈরি করুন</button>
+        </form>
+    </div>
 </div>
-
-
 
 <!-- FORGOT MODAL -->
-
 <div class="modal-overlay" id="forgotModal">
-
-    <div class="modal-box">
-
-        <span class="close-btn" onclick="closeModal('forgotModal')">&times;</span>
-
-        <h3>পাসওয়ার্ড পুনরুদ্ধার ও পরিবর্তন</h3>
-
-        <div class="form-group">
-
-            <label>আপনার ইউজার আইডি / রোল</label>
-
-            <input type="text" id="forgot-username" placeholder="User ID দিন">
-
-        </div>
-
-        <div class="btn-group">
-
-            <button type="button" class="btn-action" style="background: #ffc107; color: #000;" onclick="showResetFields()">যাচাই করুন</button>
-
-        </div>
-
-        <div id="reset-section" style="display: none; margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px;">
-
-            <div class="form-group">
-
-                <label>নতুন পাসওয়ার্ড (New Password)</label>
-
-                <input type="password" id="new-password" placeholder="নতুন পাসওয়ার্ড দিন">
-
-            </div>
-
-            <button type="button" class="btn-action" style="background: #dc3545;" onclick="saveNewPassword()">পাসওয়ার্ড আপডেট করুন</button>
-
-        </div>
-
-    </div>
-
+    <div class="modal-box">
+        <span class="close-btn" onclick="closeModal('forgotModal')">&times;</span>
+        <h3>পাসওয়ার্ড পুনরুদ্ধার ও পরিবর্তন</h3>
+        <div class="form-group">
+            <label>আপনার ইউজার আইডি / রোল</label>
+            <input type="text" id="forgot-username" placeholder="User ID দিন">
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn-action" style="background: #ffc107; color: #000;" onclick="showResetFields()">যাচাই করুন</button>
+        </div>
+        <div id="reset-section" style="display: none; margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px;">
+            <div class="form-group">
+                <label>নতুন পাসওয়ার্ড (New Password)</label>
+                <input type="password" id="new-password" placeholder="নতুন পাসওয়ার্ড দিন">
+            </div>
+            <button type="button" class="btn-action" style="background: #dc3545;" onclick="saveNewPassword()">পাসওয়ার্ড আপডেট করুন</button>
+        </div>
+    </div>
 </div>
 
-
-
 <script src="js/auth.js"></script>
-
 </body>
-
-</html> 
-
+</html>
