@@ -1,100 +1,100 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>পরীক্ষা পোর্টাল - টাইপিং এক্সাম সেন্টারে আপনাকে স্বাগতম</title>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/portal.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>পরীক্ষা পোর্টাল - টাইপিং এক্সাম সেন্টারে আপনাকে স্বাগতম</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/portal.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body onload="initPortal();">
 
-    <!-- Top Navigation Bar -->
-    <header class="portal-header">
-        <div class="portal-logo"><i class="fa-solid fa-keyboard"></i> টাইপিং পরীক্ষা কেন্দ্র</div>
-        <div id="candidateHeaderInfo" class="candidate-badge">
-            <span id="userBadgeText">👤 অতিথি পরীক্ষার্থী</span>
-            <button onclick="logoutUser()" class="btn-sm-logout">লগআউট</button>
-        </div>
-    </header>
+    <!-- Top Navigation Bar -->
+    <header class="portal-header">
+        <div class="portal-logo"><i class="fa-solid fa-keyboard"></i> টাইপিং পরীক্ষা কেন্দ্র</div>
+        <div id="candidateHeaderInfo" class="candidate-badge">
+            <span id="userBadgeText">👤 অতিথি পরীক্ষার্থী</span>
+            <button onclick="logoutUser()" class="btn-sm-logout">লগআউট</button>
+        </div>
+    </header>
 
-    <!-- Main Exam Container -->
-    <div class="portal-container">
+    <!-- Main Exam Container -->
+    <div class="portal-container">
 
-        <!-- Exam Selection Section -->
-        <div id="examSelectView" class="view-card">
-            <h2><i class="fa-solid fa-list-check"></i> পরীক্ষার তালিকা থেকে সিলেক্ট করুন</h2>
-            <p>পরীক্ষায় অংশগ্রহণের পূর্বে আপনার ইউজার আইডি ও ফোন নম্বর যাচাই করা হবে।</p>
-            <hr>
-            <div id="availableExamsList" class="exam-grid-container"></div>
-        </div>
+        <!-- Exam Selection Section -->
+        <div id="examSelectView" class="view-card">
+            <h2><i class="fa-solid fa-list-check"></i> পরীক্ষার তালিকা থেকে সিলেক্ট করুন</h2>
+            <p>পরীক্ষায় অংশগ্রহণের পূর্বে আপনার ইউজার আইডি ও ফোন নম্বর যাচাই করা হবে।</p>
+            <hr>
+            <div id="availableExamsList" class="exam-grid-container"></div>
+        </div>
 
-        <!-- Verification Modal -->
-        <div id="verifyModal" class="modal-overlay">
-            <div class="modal-card">
-                <h3><i class="fa-solid fa-user-check"></i> পরীক্ষার্থী যাচাইকরণ</h3>
-                <p>পরীক্ষা শুরু করতে আপনার তথ্য দিন:</p>
-                <form onsubmit="event.preventDefault(); verifyAndStartExam();">
-                    <div class="form-group">
-                        <label>ইউজার আইডি (User ID)</label>
-                        <input type="text" id="verifyUserId" placeholder="আপনার আইডি দিন" required>
-                    </div>
-                    <div class="form-group">
-                        <label>ফোন নম্বর (Mobile Number)</label>
-                        <input type="text" id="verifyMobile" placeholder="যেমন: 01700000000" required>
-                    </div>
-                    <div style="display:flex; gap:10px; margin-top:15px;">
-                        <button type="submit" class="btn btn-primary" style="flex:1;">যাচাই করে পরীক্ষা শুরু করুন</button>
-                        <button type="button" onclick="closeVerifyModal()" class="btn btn-danger">বাতিল</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <!-- Verification Modal -->
+        <div id="verifyModal" class="modal-overlay">
+            <div class="modal-card">
+                <h3><i class="fa-solid fa-user-check"></i> পরীক্ষার্থী যাচাইকরণ</h3>
+                <p>পরীক্ষা শুরু করতে আপনার তথ্য দিন:</p>
+                <form onsubmit="event.preventDefault(); verifyAndStartExam();">
+                    <div class="form-group">
+                        <label>ইউজার আইডি (User ID)</label>
+                        <input type="text" id="verifyUserId" placeholder="আপনার আইডি দিন" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ফোন নম্বর (Mobile Number)</label>
+                        <input type="text" id="verifyMobile" placeholder="যেমন: 01700000000" required>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <button type="submit" class="btn btn-primary" style="flex:1;">যাচাই করে পরীক্ষা শুরু করুন</button>
+                        <button type="button" onclick="closeVerifyModal()" class="btn btn-danger">বাতিল</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
-        <!-- A4 Size Typing Exam Environment -->
-        <div id="examAreaView" class="view-card" style="display:none;">
-            
-            <!-- User Info Strip -->
-            <div class="exam-user-strip">
-                <div><b>আইডি:</b> <span id="exUserId"></span></div>
-                <div><b>নাম:</b> <span id="exUserName"></span></div>
-                <div><b>জেলা:</b> <span id="exUserDistrict"></span></div>
-                <div class="timer-box"><i class="fa-regular fa-clock"></i> সময় বাকি: <span id="timerCountdown">00:00</span></div>
-            </div>
+        <!-- A4 Size Typing Exam Environment -->
+        <div id="examAreaView" class="view-card" style="display:none;">
+            
+            <!-- User Info Strip -->
+            <div class="exam-user-strip">
+                <div><b>আইডি:</b> <span id="exUserId"></span></div>
+                <div><b>নাম:</b> <span id="exUserName"></span></div>
+                <div><b>জেলা:</b> <span id="exUserDistrict"></span></div>
+                <div class="timer-box"><i class="fa-regular fa-clock"></i> সময় বাকি: <span id="timerCountdown">00:00</span></div>
+            </div>
 
-            <!-- A4 Page View -->
-            <div id="a4Paper" class="a4-paper">
-                <h2 id="currentExamTitle" class="a4-title">পরীক্ষার বিষয়</h2>
-                
-                <!-- Target Passage (Justified Text) -->
-                <div id="a4PassageBox" class="a4-passage-box"></div>
+            <!-- A4 Page View -->
+            <div id="a4Paper" class="a4-paper">
+                <h2 id="currentExamTitle" class="a4-title">পরীক্ষার বিষয়</h2>
+                
+                <!-- Target Passage (Justified Text) -->
+                <div id="a4PassageBox" class="a4-passage-box"></div>
 
-                <!-- Input Area -->
-                <textarea id="typingInputField" class="a4-input-box" placeholder="পরীক্ষা শুরু করতে এখানে টাইপ করা শুরু করুন..." disabled></textarea>
-            </div>
+                <!-- Input Area -->
+                <textarea id="typingInputField" class="a4-input-box" placeholder="পরীক্ষা শুরু করতে এখানে টাইপ করা শুরু করুন..." disabled></textarea>
+            </div>
 
-            <div style="text-align:center; margin-top:15px;">
-                <button id="btnSubmitExam" onclick="finishExamAndCalculate()" class="btn btn-success btn-lg">
-                    <i class="fa-solid fa-paper-plane"></i> পরীক্ষা জমা দিন (Submit Exam)
-                </button>
-            </div>
-        </div>
+            <div style="text-align:center; margin-top:15px;">
+                <button id="btnSubmitExam" onclick="finishExamAndCalculate()" class="btn btn-success btn-lg">
+                    <i class="fa-solid fa-paper-plane"></i> পরীক্ষা জমা দিন (Submit Exam)
+                </button>
+            </div>
+        </div>
 
-        <!-- Result View -->
-        <div id="resultAreaView" class="view-card" style="display:none;">
-            <div class="result-card-inner">
-                <h2><i class="fa-solid fa-trophy"></i> আপনার পরীক্ষার ফলাফল</h2>
-                <hr>
-                <div id="resultDetailsBox"></div>
-                <br>
-                <button onclick="location.reload()" class="btn btn-primary">অন্যান্য পরীক্ষার তালিকায় ফিরুন</button>
-            </div>
-        </div>
+        <!-- Result View -->
+        <div id="resultAreaView" class="view-card" style="display:none;">
+            <div class="result-card-inner">
+                <h2><i class="fa-solid fa-trophy"></i> আপনার পরীক্ষার ফলাফল</h2>
+                <hr>
+                <div id="resultDetailsBox"></div>
+                <br>
+                <button onclick="location.reload()" class="btn btn-primary">অন্যান্য পরীক্ষার তালিকায় ফিরুন</button>
+            </div>
+        </div>
 
-    </div>
+    </div>
 
-    <script src="js/auth.js"></script>
-    <script src="js/portal.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/portal.js"></script>
 </body>
 </html>
