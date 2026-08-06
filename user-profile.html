@@ -1,238 +1,119 @@
 <!DOCTYPE html>
-
 <html lang="bn">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>প্রোফাইল - সরকারি চাকরি টাইপিং টেস্ট পোর্টাল</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-    <link rel="stylesheet" href="css/profile.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>প্রোফাইল - সরকারি চাকরি টাইপিং টেস্ট পোর্টাল</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/profile.css">
 </head>
-
 <body>
 
-
-
 <nav>
-
-    <a href="portal.html" class="logo">
-
-        <i class="fa-solid fa-keyboard"></i> টাইপিং টেস্ট পোর্টাল
-
-    </a>
-
-    <ul class="nav-links">
-
-        <li><a href="portal.html">হোম</a></li>
-
-        <li><a href="portal.html">পরীক্ষা পোর্টাল</a></li>
-
-        <li><a href="user-profile.html" class="active"><i class="fas fa-user"></i> Profile</a></li>
-
-        <li><a href="#" onclick="logoutUser()" style="color: #dc3545;">লগআউট</a></li>
-
-    </ul>
-
+    <a href="portal.html" class="logo">
+        <i class="fa-solid fa-keyboard"></i> টাইপিং টেস্ট পোর্টাল
+    </a>
+    <ul class="nav-links">
+        <li><a href="portal.html">হোম</a></li>
+        <li><a href="portal.html">পরীক্ষা পোর্টাল</a></li>
+        <li><a href="user-profile.html" class="active"><i class="fas fa-user"></i> Profile</a></li>
+        <li><a href="#" onclick="logoutUser()" style="color: #dc3545;">লগআউট</a></li>
+    </ul>
 </nav>
 
-
-
 <div class="container">
-
-    <div class="profile-hero">
-
-        <div class="hero-banner"></div>
-
-        <div class="hero-content">
-
-            <div class="user-profile-flex">
-
-                <div class="avatar-container">
-
-                    <img id="profile-avatar-img" src="" alt="Avatar" class="user-avatar" style="display: none;">
-
-                    <div class="user-avatar" id="user-initials">--</div>
-
-                    <label for="avatar-input" class="upload-label" title="প্রোফাইল ছবি পরিবর্তন করুন">
-
-                        <i class="fa-solid fa-camera"></i>
-
-                    </label>
-
-                    <input type="file" id="avatar-input" accept="image/*" onchange="uploadAvatar(event)">
-
-                </div>
-
-                <div class="user-details">
-
-                    <h2 id="user-name">প্রার্থী</h2>
-
-                    <p id="user-post-display">আবেদনকৃত পদ: নির্বাচন করা হয়নি</p>
-
-                    <div class="user-id-badge" id="user-id-badge">ID: #---</div>
-
-                </div>
-
-            </div>
-
-            <button class="edit-profile-btn" onclick="editProfileInfo()">
-
-                <i class="fa-solid fa-pen-to-square"></i> তথ্য এডিট করুন
-
-            </button>
-
-        </div>
-
-    </div>
-
-
-
-    <div class="profile-grid">
-
-        <div class="info-card">
-
-            <h3><i class="fa-solid fa-id-card" style="color: var(--primary);"></i> ব্যক্তিগত ও প্যাকেজ তথ্য</h3>
-
-            
-
-            <div class="package-box-detail">
-
-                <h4 id="pkg-title"><i class="fa-solid fa-crown"></i> ডাইনামিক প্যাকেজ</h4>
-
-                <p><strong>স্ট্যাটাস:</strong> <span id="pkg-status-badge" style="color: var(--success);">ফ্রি ট্রায়াল</span></p>
-
-                <p><strong>মেয়াদ:</strong> <span id="pkg-expiry">মেয়াদ নেই</span></p>
-
-            </div>
-
-
-
-            <ul class="personal-info-list">
-
-                <li><span>পূর্ণ নাম</span> <span id="info-name">--</span></li>
-
-                <li><span>ইউজার আইডি / রোল</span> <span id="info-username">--</span></li>
-
-                <li><span>আবেদনকৃত পদ</span> <span id="info-post">--</span></li>
-
-                <li><span>মোবাইল নম্বর</span> <span id="info-phone">--</span></li>
-
-            </ul>
-
-        </div>
-
-
-
-        <div class="stats-grid-right">
-
-            <div class="stat-card">
-
-                <div class="stat-icon total"><i class="fa-solid fa-file-lines"></i></div>
-
-                <div class="stat-info">
-
-                    <h3>মোট পরীক্ষা দিয়েছেন</h3>
-
-                    <p id="stat-total">0</p>
-
-                </div>
-
-            </div>
-
-            <div class="stat-card">
-
-                <div class="stat-icon pass"><i class="fa-solid fa-check-circle"></i></div>
-
-                <div class="stat-info">
-
-                    <h3>পাস করেছেন</h3>
-
-                    <p id="stat-passed">0</p>
-
-                </div>
-
-            </div>
-
-            <div class="stat-card">
-
-                <div class="stat-icon fail"><i class="fa-solid fa-times-circle"></i></div>
-
-                <div class="stat-info">
-
-                    <h3>ফেল করেছেন</h3>
-
-                    <p id="stat-failed">0</p>
-
-                </div>
-
-            </div>
-
-            <div class="stat-card">
-
-                <div class="stat-icon speed"><i class="fa-solid fa-gauge-high"></i></div>
-
-                <div class="stat-info">
-
-                    <h3>সর্বোচ্চ গতি</h3>
-
-                    <p id="stat-highest">0 WPM</p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-
-    <div class="section-card">
-
-        <div class="section-header">
-
-            <h3><i class="fa-solid fa-clock-rotate-left"></i> সাম্প্রতিক পরীক্ষার পারফরম্যান্স হিস্ট্রি</h3>
-
-        </div>
-
-        <div class="history-list" id="exam-history-list"></div>
-
-    </div>
-
+    <div class="profile-hero">
+        <div class="hero-banner"></div>
+        <div class="hero-content">
+            <div class="user-profile-flex">
+                <div class="avatar-container">
+                    <img id="profile-avatar-img" src="" alt="Avatar" class="user-avatar" style="display: none;">
+                    <div class="user-avatar" id="user-initials">--</div>
+                    <label for="avatar-input" class="upload-label" title="প্রোফাইল ছবি পরিবর্তন করুন">
+                        <i class="fa-solid fa-camera"></i>
+                    </label>
+                    <input type="file" id="avatar-input" accept="image/*" onchange="uploadAvatar(event)">
+                </div>
+                <div class="user-details">
+                    <h2 id="user-name">প্রার্থী</h2>
+                    <p id="user-post-display">আবেদনকৃত পদ: নির্বাচন করা হয়নি</p>
+                    <div class="user-id-badge" id="user-id-badge">ID: #---</div>
+                </div>
+            </div>
+            <button class="edit-profile-btn" onclick="editProfileInfo()">
+                <i class="fa-solid fa-pen-to-square"></i> তথ্য এডিট করুন
+            </button>
+        </div>
+    </div>
+
+    <div class="profile-grid">
+        <div class="info-card">
+            <h3><i class="fa-solid fa-id-card" style="color: var(--primary);"></i> ব্যক্তিগত ও প্যাকেজ তথ্য</h3>
+            
+            <div class="package-box-detail">
+                <h4 id="pkg-title"><i class="fa-solid fa-crown"></i> ডাইনামিক প্যাকেজ</h4>
+                <p><strong>স্ট্যাটাস:</strong> <span id="pkg-status-badge" style="color: var(--success);">ফ্রি ট্রায়াল</span></p>
+                <p><strong>মেয়াদ:</strong> <span id="pkg-expiry">মেয়াদ নেই</span></p>
+            </div>
+
+            <ul class="personal-info-list">
+                <li><span>পূর্ণ নাম</span> <span id="info-name">--</span></li>
+                <li><span>ইউজার আইডি / রোল</span> <span id="info-username">--</span></li>
+                <li><span>আবেদনকৃত পদ</span> <span id="info-post">--</span></li>
+                <li><span>মোবাইল নম্বর</span> <span id="info-phone">--</span></li>
+            </ul>
+        </div>
+
+        <div class="stats-grid-right">
+            <div class="stat-card">
+                <div class="stat-icon total"><i class="fa-solid fa-file-lines"></i></div>
+                <div class="stat-info">
+                    <h3>মোট পরীক্ষা দিয়েছেন</h3>
+                    <p id="stat-total">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon pass"><i class="fa-solid fa-check-circle"></i></div>
+                <div class="stat-info">
+                    <h3>পাস করেছেন</h3>
+                    <p id="stat-passed">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon fail"><i class="fa-solid fa-times-circle"></i></div>
+                <div class="stat-info">
+                    <h3>ফেল করেছেন</h3>
+                    <p id="stat-failed">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon speed"><i class="fa-solid fa-gauge-high"></i></div>
+                <div class="stat-info">
+                    <h3>সর্বোচ্চ গতি</h3>
+                    <p id="stat-highest">0 WPM</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> সাম্প্রতিক পরীক্ষার পারফরম্যান্স হিস্ট্রি</h3>
+        </div>
+        <div class="history-list" id="exam-history-list"></div>
+    </div>
 </div>
 
-
-
 <script src="js/auth.js"></script>
-
 <script src="js/profile.js"></script>
-
 <script>
-
-    window.onload = function() {
-
-        checkAuthGuard();
-
-        loadUserProfile();
-
-    };
-
+    window.onload = function() {
+        checkAuthGuard();
+        loadUserProfile();
+    };
 </script>
-
 </body>
-
-</html> 
-
+</html>
