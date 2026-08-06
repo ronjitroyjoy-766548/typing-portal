@@ -1,208 +1,101 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>অ্যাডমিন কন্ট্রোল প্যানেল - টাইপিং পোর্টাল</title>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>এডমিন ড্যাশবোর্ড - টাইপিং পোর্টাল</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/admin.css">
 </head>
-<body onload="checkAuthGuard(); initAdminPanel();">
+<body onload="initAdminDashboard()">
 
-    <div class="admin-nav-bar">
-        <div class="admin-logo">
-            <i class="fa-solid fa-user-shield"></i> অ্যাডমিন কন্ট্রোল ড্যাশবোর্ড
-        </div>
-        <div class="admin-user-info">
-            <span>👋 সিস্টেম অ্যাডমিন</span>
-            <button onclick="logoutUser()" class="btn-logout-top"><i class="fa-solid fa-right-from-bracket"></i> লগআউট</button>
-        </div>
-    </div>
+    <nav class="navbar">
+        <div class="nav-brand"><i class="fa-solid fa-user-shield"></i> এডমিন কন্ট্রোল প্যানেল</div>
+        <button onclick="logoutUser()" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> লগআউট</button>
+    </nav>
 
-    <div class="admin-dashboard-layout">
-        <aside class="admin-sidebar">
-            <ul class="admin-menu-list">
-                <li class="active" onclick="switchAdminTab('examSection', this)">
-                    <i class="fa-solid fa-pen-to-square"></i> ১. লাইভ পরীক্ষা ও প্যাসেজ সেটআপ
-                </li>
-                <li onclick="switchAdminTab('resultsSection', this)">
-                    <i class="fa-solid fa-chart-line"></i> ২. ফলাফলের তালিকা ও মেধাক্রম
-                </li>
-                <li onclick="switchAdminTab('pkgSection', this)">
-                    <i class="fa-solid fa-box-open"></i> ৩. প্যাকেজ ও সুবিধাসমূহ
-                </li>
-                <li onclick="switchAdminTab('paymentSection', this)">
-                    <i class="fa-solid fa-file-invoice-dollar"></i> ৪. পেমেন্ট রিকোয়েস্ট
-                </li>
-                <li onclick="switchAdminTab('noticeSection', this)">
-                    <i class="fa-solid fa-bullhorn"></i> ৫. নোটিশ বোর্ড
-                </li>
-                <li onclick="switchAdminTab('usersSection', this)">
-                    <i class="fa-solid fa-users"></i> ৬. নিবন্ধিত পরীক্ষার্থী
-                </li>
-            </ul>
-        </aside>
+    <div class="container main-content">
+        <div class="admin-grid">
+            <!-- Create Exam Card -->
+            <div class="admin-card">
+                <h3><i class="fa-solid fa-plus-circle"></i> নতুন পরীক্ষা তৈরি করুন</h3>
+                <form onsubmit="handleCreateExam(event)" style="margin-top:15px;">
+                    <div class="form-group">
+                        <label>পরীক্ষার শিরোনাম</label>
+                        <input type="text" id="examTitle" placeholder="যেমন: কম্পিউটার অপারেটর টেস্ট" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>সময় (মিনিট)</label>
+                            <input type="number" id="examDuration" value="5" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>ভাষা</label>
+                            <select id="examLang">
+                                <option value="Bangla">বাংলা</option>
+                                <option value="English">ইংরেজি</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>পাস WPM</label>
+                            <input type="number" id="passWpm" value="20" required>
+                        </div>
+                        <div class="form-group">
+                            <label>পাস Accuracy (%)</label>
+                            <input type="number" id="passAccuracy" value="80" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>ব্যাকস্পেস ব্যবহারের অনুমতি?</label>
+                        <select id="allowBackspace">
+                            <option value="yes">হ্যাঁ (Allowed)</option>
+                            <option value="no">না (Restricted)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>পরীক্ষার অনুচ্ছেদ (Passage)</label>
+                        <textarea id="examPassage" rows="5" placeholder="পরীক্ষার মূল অনুচ্ছেদ এখানে লিখুন..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary full-width">পরীক্ষা প্রকাশ করুন</button>
+                </form>
+            </div>
 
-        <main class="admin-content-area">
+            <!-- Active Exams Card -->
+            <div class="admin-card">
+                <h3><i class="fa-solid fa-list-check"></i> তৈরি করা সকল পরীক্ষা</h3>
+                <div id="adminExamListDisplay" style="margin-top:15px;"></div>
+            </div>
+        </div>
 
-            <!-- 1. Live Exam Setup -->
-            <section id="examSection" class="admin-tab-content active">
-                <div class="admin-card">
-                    <h2><i class="fa-solid fa-pen-to-square"></i> লাইভ পরীক্ষা ও প্যাসেজ সেটআপ</h2>
-                    <hr class="section-divider">
-                    <form onsubmit="event.preventDefault(); saveLiveExamSetup();">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>পরীক্ষার শিরোনাম / বিষয়</label>
-                                <input type="text" id="examSetupTitle" placeholder="যেমন: কম্পিউটার অপারেটর নিয়োগ পরীক্ষা - ২০২৬" required>
-                            </div>
-                            <div class="form-group">
-                                <label>পরীক্ষার ভাষা</label>
-                                <select id="examSetupLang">
-                                    <option value="bangla">বাংলা (Bangla)</option>
-                                    <option value="english">English</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>পরীক্ষার সময় (মিনিট)</label>
-                                <input type="number" id="examSetupDuration" value="5" required>
-                            </div>
-                        </div>
+        <!-- Leaderboard / Merit List -->
+        <div class="admin-card" style="margin-top:25px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3><i class="fa-solid fa-trophy"></i> সকল পরীক্ষার্থীর মেধা তালিকা (Merit List)</h3>
+                <button onclick="clearAllResults()" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i> রেজাল্ট ক্লিয়ার</button>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>পরীক্ষার্থী</th>
+                            <th>আইডি</th>
+                            <th>জেলা</th>
+                            <th>পরীক্ষা</th>
+                            <th>স্পিড (WPM)</th>
+                            <th>Acc (%)</th>
+                            <th>ফলাফল</th>
+                        </tr>
+                    </thead>
+                    <tbody id="meritTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-                        <div class="form-group">
-                            <label>পরীক্ষার অনুচ্ছেদ / প্যাসেজ (Passage Text)</label>
-                            <textarea id="examSetupPassage" rows="6" placeholder="এখানে পরীক্ষার মূল অনুচ্ছেদটি লিখুন..." required></textarea>
-                        </div>
-
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>ব্যাকস্পেস ব্যবহার</label>
-                                <select id="allowBackspace">
-                                    <option value="yes">হ্যাঁ (চালু থাকবে)</option>
-                                    <option value="no">না (বন্ধ থাকবে)</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>টেক্সট হাইলাইট</label>
-                                <select id="allowHighlight">
-                                    <option value="yes">হ্যাঁ (হাইলাইট দেখাবে)</option>
-                                    <option value="no">না (সাধারণ টেক্সট)</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>পাস করার ন্যূনতম গতি (WPM)</label>
-                                <input type="number" id="examPassWpm" value="20" required>
-                            </div>
-                            <div class="form-group">
-                                <label>পাস করার ন্যূনতম একুরেসি (%)</label>
-                                <input type="number" id="examPassAccuracy" value="80" required>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-success"><i class="fa-solid fa-plus"></i> পরীক্ষাটি তালিকায় যুক্ত করুন</button>
-                    </form>
-
-                    <h3 style="margin-top:25px;">বর্তমান পরীক্ষার তালিকা</h3>
-                    <div id="adminExamList"></div>
-                </div>
-            </section>
-
-            <!-- 2. Exam Results & Leaderboard -->
-            <section id="resultsSection" class="admin-tab-content">
-                <div class="admin-card">
-                    <h2><i class="fa-solid fa-chart-line"></i> পরীক্ষার ফলাফল ও মেধাক্রম তালিকা</h2>
-                    <hr class="section-divider">
-                    
-                    <div style="margin-bottom:15px; display:flex; gap:10px; align-items:center;">
-                        <button class="btn btn-success" onclick="toggleResultPublication(true)">✅ ফলাফল প্রকাশ করুন</button>
-                        <button class="btn btn-danger" onclick="toggleResultPublication(false)">🔒 ফলাফল গোপন করুন</button>
-                        <span id="pubStatusBadge" style="font-weight:bold;"></span>
-                    </div>
-
-                    <div style="overflow-x:auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>মেধাক্রম (Rank)</th>
-                                    <th>পরীক্ষার্থীর নাম</th>
-                                    <th>জেলা</th>
-                                    <th>মোবাইল নম্বর</th>
-                                    <th>গতি (WPM)</th>
-                                    <th>নির্ভুলতা (%)</th>
-                                    <th>স্ট্যাটাস</th>
-                                    <th>তারিখ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="allCandidateResultsTable"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 3. Packages -->
-            <section id="pkgSection" class="admin-tab-content">
-                <div class="admin-card">
-                    <h2><i class="fa-solid fa-box-open"></i> প্যাকেজ সেটআপ</h2>
-                    <hr class="section-divider">
-                    <form onsubmit="event.preventDefault(); addPackageAdmin();">
-                        <div class="form-grid">
-                            <div class="form-group"><label>প্যাকেজের নাম</label><input type="text" id="pkgTitle" required></div>
-                            <div class="form-group"><label>মূল্য (টাকা)</label><input type="number" id="pkgPrice" required></div>
-                            <div class="form-group"><label>মেয়াদ (দিন)</label><input type="number" id="pkgDays" required></div>
-                        </div>
-                        <div class="form-group"><label>সুবিধাসমূহ</label><input type="text" id="pkgFeatures"></div>
-                        <button type="submit" class="btn btn-success">প্যাকেজ যুক্ত করুন</button>
-                    </form>
-                    <div id="activePackagesList" style="margin-top:20px;"></div>
-                </div>
-            </section>
-
-            <!-- 4. Payment Requests -->
-            <section id="paymentSection" class="admin-tab-content">
-                <div class="admin-card">
-                    <h2><i class="fa-solid fa-file-invoice-dollar"></i> পেমেন্ট রিকোয়েস্ট</h2>
-                    <hr class="section-divider">
-                    <table>
-                        <thead>
-                            <tr><th>তারিখ</th><th>পরীক্ষার্থী</th><th>প্যাকেজ</th><th>TrxID</th><th>স্ট্যাটাস</th><th>অ্যাকশন</th></tr>
-                        </thead>
-                        <tbody id="adminPkgReqList"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- 5. Notices -->
-            <section id="noticeSection" class="admin-tab-content">
-                <div class="admin-card">
-                    <h2><i class="fa-solid fa-bullhorn"></i> নোটিশ বোর্ড</h2>
-                    <hr class="section-divider">
-                    <form onsubmit="event.preventDefault(); postAdminNotice();">
-                        <div class="form-group"><textarea id="noticeTextInput" rows="3" placeholder="নোটিশ লিখুন..." required></textarea></div>
-                        <button type="submit" class="btn btn-primary">পাবলিশ করুন</button>
-                    </form>
-                    <div id="adminNoticeArchive" style="margin-top:20px;"></div>
-                </div>
-            </section>
-
-            <!-- 6. Users -->
-            <section id="usersSection" class="admin-tab-content">
-                <div class="admin-card">
-                    <h2><i class="fa-solid fa-users"></i> নিবন্ধিত পরীক্ষার্থী তালিকা</h2>
-                    <hr class="section-divider">
-                    <table>
-                        <thead>
-                            <tr><th>#</th><th>নাম</th><th>ইউজার আইডি</th><th>জেলা</th><th>মোবাইল</th></tr>
-                        </thead>
-                        <tbody id="registeredUsersTable"></tbody>
-                    </table>
-                </div>
-            </section>
-
-        </main>
-    </div>
-
-    <script src="js/auth.js"></script>
-    <script src="js/admin.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
 </body>
 </html>
