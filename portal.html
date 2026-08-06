@@ -1,298 +1,100 @@
 <!DOCTYPE html>
-
 <html lang="bn">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Govt Job Typing Test & Practice Portal</title>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
+    <title>পরীক্ষা পোর্টাল - টাইপিং এক্সাম সেন্টারে আপনাকে স্বাগতম</title>
     <link rel="stylesheet" href="css/main.css">
-
+    <link rel="stylesheet" href="css/portal.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+<body onload="initPortal();">
 
-<body class="portal-container">
+    <!-- Top Navigation Bar -->
+    <header class="portal-header">
+        <div class="portal-logo"><i class="fa-solid fa-keyboard"></i> টাইপিং পরীক্ষা কেন্দ্র</div>
+        <div id="candidateHeaderInfo" class="candidate-badge">
+            <span id="userBadgeText">👤 অতিথি পরীক্ষার্থী</span>
+            <button onclick="logoutUser()" class="btn-sm-logout">লগআউট</button>
+        </div>
+    </header>
 
+    <!-- Main Exam Container -->
+    <div class="portal-container">
 
-
-<div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleMenu()"></div>
-
-
-
-<div class="side-drawer" id="sideDrawer">
-
-    <div class="drawer-header">
-
-        <a href="user-profile.html" style="text-decoration: none; color: white; display: flex; align-items: center; gap: 10px; cursor: pointer;">
-
-            <img id="userAvatar" src="https://via.placeholder.com/40" alt="Profile" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover;">
-
-            <span id="navUserName">প্রার্থী</span>
-
-        </a>
-
-        <span onclick="toggleMenu()" style="cursor:pointer; font-size: 20px;">&times;</span>
-
-    </div>
-
-    <ul class="drawer-menu">
-
-        <li><a href="#" onclick="switchPortal('practice'); toggleMenu();">⌨️ Practice Portal</a></li>
-
-        <li><a href="#" onclick="switchPortal('exam'); toggleMenu();">📝 Exam Portal</a></li>
-
-        <li><a href="#" onclick="showTab('packagesTab'); toggleMenu();"><i class="fas fa-box-open"></i> প্যাকেজসমূহ</a></li>
-
-        <li><a href="#" onclick="showTab('resultsTab'); toggleMenu();"><i class="fas fa-trophy"></i> রেজাল্ট & মেধা তালিকা</a></li>
-
-        <li><a href="#" onclick="showTab('noticeboardTab'); toggleMenu();"><i class="fas fa-bullhorn"></i> নোটিশ বোর্ড</a></li>
-
-        <li><a href="#" onclick="showTab('supportTab'); toggleMenu();"><i class="fas fa-headset"></i> সাপোর্ট কেন্দ্র</a></li>
-
-        <li><a href="#" onclick="logoutUser()" style="color: #dc3545;">🚪 Logout</a></li>
-
-    </ul>
-
-</div>
-
-
-
-<div class="top-corner-bar">
-
-    <button class="hamburger-btn" onclick="toggleMenu()">☰ মেনু</button>
-
-</div>
-
-
-
-<div id="noticeBoardBox" style="background: #1e293b; color: #fff; padding: 8px 15px; border-radius: 6px; width:100%; max-width:850px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
-
-    <div style="display: flex; align-items: center; flex-grow: 1; overflow: hidden; white-space: nowrap;">
-
-        <span style="background: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; margin-right: 10px;">📢 নোটিশ</span>
-
-        <marquee id="noticeMarquee" behavior="scroll" direction="left" scrollamount="5" style="font-size: 14px; color: #f8fafc;">
-
-            কোনো নতুন নোটিশ নেই।
-
-        </marquee>
-
-    </div>
-
-    <button onclick="dismissNotice()" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; margin-left: 10px;">&times;</button>
-
-</div>
-
-
-
-<!-- PRACTICE PORTAL -->
-
-<div id="practice-portal-section" class="tab-content" style="display: block;">
-
-    <div class="a4-page">
-
-        <h2 style="text-align: center; color: #1e293b; font-size: 18px;">⌨️ টাইপিং প্র্যাকটিস পোর্টাল</h2>
-
-
-
-        <div class="prac-controls">
-
-            <div>
-
-                <label><input type="radio" name="prac-mode" value="bn" onclick="selectPracMode('bn')" checked> বাংলা</label> &nbsp;
-
-                <label><input type="radio" name="prac-mode" value="en" onclick="selectPracMode('en')"> English</label>
-
-            </div>
-
-            <div>
-
-                <label>সময় (মি.): </label>
-
-                <input type="number" id="pracTimeInput" min="1" max="60" value="1" style="width:50px; padding: 2px 5px;" onchange="resetPracText()">
-
-            </div>
-
-            <div>
-
-                <button onclick="resetPracText()" style="background:#8e44ad; color:#fff; border:none; padding:4px 10px; border-radius:4px; cursor:pointer;">🔄 পরিবর্তন করুন</button>
-
-            </div>
-
+        <!-- Exam Selection Section -->
+        <div id="examSelectView" class="view-card">
+            <h2><i class="fa-solid fa-list-check"></i> পরীক্ষার তালিকা থেকে সিলেক্ট করুন</h2>
+            <p>পরীক্ষায় অংশগ্রহণের পূর্বে আপনার ইউজার আইডি ও ফোন নম্বর যাচাই করা হবে।</p>
+            <hr>
+            <div id="availableExamsList" class="exam-grid-container"></div>
         </div>
 
-
-
-        <div id="pracTextDisplay" class="prac-text-display"></div>
-
-
-
-        <div style="position: relative;">
-
-            <div id="pracActionArea" style="position: absolute; top: 35%; left: 38%; z-index: 10;">
-
-                <button id="pracStartBtn" onclick="startPracTest()" style="background: #27ae60; color: white; border: none; padding: 12px 28px; font-size: 15px; font-weight: bold; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">Start Practice</button>
-
+        <!-- Verification Modal -->
+        <div id="verifyModal" class="modal-overlay">
+            <div class="modal-card">
+                <h3><i class="fa-solid fa-user-check"></i> পরীক্ষার্থী যাচাইকরণ</h3>
+                <p>পরীক্ষা শুরু করতে আপনার তথ্য দিন:</p>
+                <form onsubmit="event.preventDefault(); verifyAndStartExam();">
+                    <div class="form-group">
+                        <label>ইউজার আইডি (User ID)</label>
+                        <input type="text" id="verifyUserId" placeholder="আপনার আইডি দিন" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ফোন নম্বর (Mobile Number)</label>
+                        <input type="text" id="verifyMobile" placeholder="যেমন: 01700000000" required>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <button type="submit" class="btn btn-primary" style="flex:1;">যাচাই করে পরীক্ষা শুরু করুন</button>
+                        <button type="button" onclick="closeVerifyModal()" class="btn btn-danger">বাতিল</button>
+                    </div>
+                </form>
             </div>
-
-            <textarea id="pracTypingInput" class="prac-typing-input" placeholder="অনুশীলন শুরু করতে 'Start Practice' বাটনে চাপুন..." disabled oninput="handlePracTyping()"></textarea>
-
         </div>
 
+        <!-- A4 Size Typing Exam Environment -->
+        <div id="examAreaView" class="view-card" style="display:none;">
+            
+            <!-- User Info Strip -->
+            <div class="exam-user-strip">
+                <div><b>আইডি:</b> <span id="exUserId"></span></div>
+                <div><b>নাম:</b> <span id="exUserName"></span></div>
+                <div><b>জেলা:</b> <span id="exUserDistrict"></span></div>
+                <div class="timer-box"><i class="fa-regular fa-clock"></i> সময় বাকি: <span id="timerCountdown">00:00</span></div>
+            </div>
 
+            <!-- A4 Page View -->
+            <div id="a4Paper" class="a4-paper">
+                <h2 id="currentExamTitle" class="a4-title">পরীক্ষার বিষয়</h2>
+                
+                <!-- Target Passage (Justified Text) -->
+                <div id="a4PassageBox" class="a4-passage-box"></div>
 
-        <div class="prac-stats">
+                <!-- Input Area -->
+                <textarea id="typingInputField" class="a4-input-box" placeholder="পরীক্ষা শুরু করতে এখানে টাইপ করা শুরু করুন..." disabled></textarea>
+            </div>
 
-            <div>সময় বাকি: <span id="pracTimer">01:00</span></div>
+            <div style="text-align:center; margin-top:15px;">
+                <button id="btnSubmitExam" onclick="finishExamAndCalculate()" class="btn btn-success btn-lg">
+                    <i class="fa-solid fa-paper-plane"></i> পরীক্ষা জমা দিন (Submit Exam)
+                </button>
+            </div>
+        </div>
 
-            <div>গতি (WPM): <span id="pracWpm">0</span></div>
-
-            <div>নির্ভুলতা: <span id="pracAccuracy">100</span>%</div>
-
+        <!-- Result View -->
+        <div id="resultAreaView" class="view-card" style="display:none;">
+            <div class="result-card-inner">
+                <h2><i class="fa-solid fa-trophy"></i> আপনার পরীক্ষার ফলাফল</h2>
+                <hr>
+                <div id="resultDetailsBox"></div>
+                <br>
+                <button onclick="location.reload()" class="btn btn-primary">অন্যান্য পরীক্ষার তালিকায় ফিরুন</button>
+            </div>
         </div>
 
     </div>
 
-</div>
-
-
-
-<!-- EXAM PORTAL -->
-
-<div id="exam-portal-section" class="tab-content" style="display: none;">
-
-    <div class="a4-page">
-
-        <h2 style="text-align: center; color: #dc2626; font-size: 18px;">📝 সরকারি চাকরি লাইভ টাইপিং পরীক্ষা</h2>
-
-        <div id="examContainer"></div>
-
-    </div>
-
-</div>
-
-
-
-<!-- PACKAGES TAB -->
-
-<div id="packagesTab" class="tab-content" style="display:none; background:#fff; padding:20px; border-radius:8px;">
-
-    <h2>📦 উপলব্ধ প্যাকেজসমূহ</h2>
-
-    <div id="userPackagesContainer" style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;"></div>
-
-</div>
-
-
-
-<!-- RESULTS TAB -->
-
-<div id="resultsTab" class="tab-content" style="display:none; background:#fff; padding:20px; border-radius:8px;">
-
-    <h2>🏆 পরীক্ষার ফলাফল ও মেধা তালিকা</h2>
-
-    <p id="resultStatusMessage" style="margin-top: 10px; font-weight:bold;"></p>
-
-    <table id="resultTable" style="display:none;">
-
-        <thead>
-
-            <tr>
-
-                <th>ক্রম</th>
-
-                <th>পরীক্ষার্থীর নাম</th>
-
-                <th>স্পিড ও একুরেসি</th>
-
-                <th>তারিখ</th>
-
-            </tr>
-
-        </thead>
-
-        <tbody id="userResultList"></tbody>
-
-    </table>
-
-</div>
-
-
-
-<!-- NOTICES TAB -->
-
-<div id="noticeboardTab" class="tab-content" style="display:none; background:#fff; padding:20px; border-radius:8px;">
-
-    <h2>📜 সকল অফিশিয়াল নোটিশ</h2>
-
-    <div id="fullNoticeList" style="margin-top: 15px;"></div>
-
-</div>
-
-
-
-<!-- SUPPORT TAB -->
-
-<div id="supportTab" class="tab-content" style="display:none; background:#fff; padding:20px; border-radius:8px;">
-
-    <h2>🎧 হেল্প & সাপোর্ট কেন্দ্র</h2>
-
-    <p style="margin-top:5px; font-size:14px; color:#666;">যে কোনো সমস্যায় নিচের লিংকগুলোর মাধ্যমে আমাদের সাথে যোগাযোগ করুন:</p>
-
-    <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
-
-        <a id="linkFbPage" href="#" target="_blank" style="padding: 10px 15px; background: #1877f2; color: #fff; text-decoration: none; border-radius: 4px; font-weight:bold;"><i class="fab fa-facebook"></i> Facebook Page</a>
-
-        <a id="linkFbGroup" href="#" target="_blank" style="padding: 10px 15px; background: #0666da; color: #fff; text-decoration: none; border-radius: 4px; font-weight:bold;"><i class="fab fa-facebook-square"></i> Facebook Group</a>
-
-        <a id="linkWa" href="#" target="_blank" style="padding: 10px 15px; background: #25D366; color: #fff; text-decoration: none; border-radius: 4px; font-weight:bold;"><i class="fab fa-whatsapp"></i> WhatsApp Group</a>
-
-        <a id="linkTg" href="#" target="_blank" style="padding: 10px 15px; background: #0088cc; color: #fff; text-decoration: none; border-radius: 4px; font-weight:bold;"><i class="fab fa-telegram"></i> Telegram Channel</a>
-
-    </div>
-
-</div>
-
-
-
-<script src="js/auth.js"></script>
-
-<script src="js/typing.js"></script>
-
-<script>
-
-    window.onload = function() {
-
-        checkAuthGuard();
-
-        syncUserDataUI();
-
-        loadAdminNotices();
-
-        resetPracText();
-
-    };
-
-
-
-    window.addEventListener('storage', function(e) {
-
-        if (e.key === 'adminNoticeList') loadAdminNotices();
-
-        if (e.key === 'adminExamSetup') checkLiveExam();
-
-        if (e.key === 'isResultPublished') checkAndShowResult();
-
-    });
-
-</script>
-
+    <script src="js/auth.js"></script>
+    <script src="js/portal.js"></script>
 </body>
-
-</html> 
-
+</html>
