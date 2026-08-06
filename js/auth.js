@@ -1,20 +1,12 @@
-// Auth & Storage Initialization
-(function initAdmin() {
-    let users = JSON.parse(localStorage.getItem('usersData')) || {};
-    if (!users["admin"]) {
-        users["admin"] = {
-            fullname: "সিস্টেম অ্যাডমিন",
-            post: "অ্যাডমিনিস্ট্রেটর",
-            mobile: "01722243656",
-            pass: "123456",
-            userId: "admin",
-            role: "admin"
-        };
-        localStorage.setItem('usersData', JSON.stringify(users));
-    }
-})();
+// Auth & Guard Management System (Secured)
 
-// Route Guard Check
+if (!localStorage.getItem('usersData')) {
+    const defaultUsers = {
+        "admin": { fullname: "সিস্টেম অ্যাডমিন", post: "অ্যাডমিনিস্ট্রেটর", mobile: "01700000000", pass: "123456", userId: "admin", role: "admin" }
+    };
+    localStorage.setItem('usersData', JSON.stringify(defaultUsers));
+}
+
 function checkAuthGuard() {
     const currentPage = window.location.pathname.split("/").pop();
     const loggedInUser = JSON.parse(sessionStorage.getItem('loggedInUser')) || JSON.parse(localStorage.getItem('loggedInUser'));
@@ -24,29 +16,30 @@ function checkAuthGuard() {
         return;
     }
 
-    if (currentPage === 'admin.html') {
-        if (!loggedInUser || loggedInUser.userId !== 'admin') {
-            alert("⚠️ আপনার অ্যাডমিন প্যানেলে প্রবেশের অনুমতি নেই!");
-            window.location.href = "portal.html";
-        }
+    if (currentPage === 'admin.html' && loggedInUser && loggedInUser.userId !== 'admin') {
+        alert("⚠️ আপনার এই পেজে প্রবেশের অনুমতি নেই!");
+        window.location.href = "portal.html";
     }
 }
 
-// Modal Toggle Helpers
-function openModal(id) {
-    const modal = document.getElementById(id);
-    if(modal) modal.style.display = 'flex';
+function logoutUser() {
+    sessionStorage.clear();
+    localStorage.removeItem('loggedInUser');
+    window.location.href = "index.html";
 }
 
-function closeModal(id) {
+function openModal(id) { 
     const modal = document.getElementById(id);
-    if(modal) modal.style.display = 'none';
+    if(modal) modal.style.display = 'flex'; 
 }
 
-// Login Handler with Relative Path Redirect
+function closeModal(id) { 
+    const modal = document.getElementById(id);
+    if(modal) modal.style.display = 'none'; 
+}
+
 function handleLogin(event) {
-    if (event) event.preventDefault();
-
+    event.preventDefault();
     const user = document.getElementById('username').value.trim();
     const pass = document.getElementById('password').value.trim();
     const users = JSON.parse(localStorage.getItem('usersData')) || {};
@@ -54,22 +47,15 @@ function handleLogin(event) {
     if (users[user] && users[user].pass === pass) {
         sessionStorage.setItem('loggedInUser', JSON.stringify(users[user]));
         localStorage.setItem('loggedInUser', JSON.stringify(users[user]));
-        
-        // GitHub Pages Compatible Relative Path Redirect
-        if (user === 'admin') {
-            window.location.replace("admin.html");
-        } else {
-            window.location.replace("portal.html");
-        }
+        window.location.href = (user === 'admin') ? "admin.html" : "portal.html"; 
     } else {
         const errBox = document.getElementById('login-error');
-        if (errBox) errBox.style.display = "block";
+        if(errBox) errBox.style.display = "block";
     }
 }
 
-// Register Handler
 function handleRegister(event) {
-    if (event) event.preventDefault();
+    event.preventDefault();
     const fullname = document.getElementById('reg-fullname').value.trim();
     const post = document.getElementById('reg-post').value;
     const mobile = document.getElementById('reg-mobile').value.trim();
@@ -86,11 +72,10 @@ function handleRegister(event) {
         sessionStorage.setItem('loggedInUser', JSON.stringify(newUser));
         localStorage.setItem('loggedInUser', JSON.stringify(newUser));
         alert("✅ রেজিস্ট্রেশন সফল হয়েছে!");
-        window.location.replace("portal.html");
+        window.location.href = "portal.html";
     }
 }
 
-// Password Reset Handlers
 function showResetFields() {
     const searchUser = document.getElementById('forgot-username').value.trim();
     const users = JSON.parse(localStorage.getItem('usersData')) || {};
@@ -110,10 +95,4 @@ function saveNewPassword() {
         alert("✅ পাসওয়ার্ড সফলভাবে আপডেট হয়েছে!");
         closeModal('forgotModal');
     }
-}
-
-function logoutUser() {
-    sessionStorage.clear();
-    localStorage.removeItem('loggedInUser');
-    window.location.replace("index.html");
 }
