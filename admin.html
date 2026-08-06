@@ -1,166 +1,97 @@
 <!DOCTYPE html>
-
 <html lang="bn">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>অ্যাডমিন প্যানেল Pro</title>
-
-    <link rel="stylesheet" href="css/main.css">
-
+    <!-- CSS ফাইল লিঙ্ক (পাথ সঠিক রাখবেন) -->
     <link rel="stylesheet" href="css/admin.css">
-
 </head>
-
 <body>
 
+<div class="container">
+    <!-- Header Card -->
+    <div class="admin-card">
+        <h2>⚙️ অ্যাডমিন প্যানেল: কন্ট্রোল ও পেমেন্ট সেন্টার</h2>
+    </div>
 
+    <!-- 📦 1. PACKAGE CREATION & MANAGEMENT -->
+    <div class="admin-card">
+        <h3>📦 প্যাকেজ ও সুবিধাসমূহ সেটআপ করুন</h3>
+        
+        <form id="packageForm" onsubmit="event.preventDefault(); addPackageAdmin();">
+            <div class="form-group">
+                <label for="pkgTitle">প্যাকেজের নাম:</label>
+                <input type="text" id="pkgTitle" placeholder="উদাহরণ: ১ মাসের প্রিমিয়াম প্যাকেজ" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label for="pkgPrice">মূল্য (৳):</label>
+                    <input type="number" id="pkgPrice" placeholder="500" min="0" required>
+                </div>
+                <div class="form-group flex-1">
+                    <label for="pkgDays">মেয়াদ (দিন):</label>
+                    <input type="number" id="pkgDays" placeholder="30" min="1" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="pkgFeatures">সুবিধাসমূহ (কমা দিয়ে লিখুন):</label>
+                <textarea id="pkgFeatures" placeholder="উদাহরণ: সকল এক্সাম এক্সেস, লাইভ চ্যাট সাপোর্ট, রেজাল্ট এনালাইসিস" rows="3" required></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-success">+ নতুন প্যাকেজ যুক্ত করুন</button>
+        </form>
 
-<div class="admin-card">
+        <h4 class="section-title">বর্তমান চালু থাকা প্যাকেজসমূহ:</h4>
+        <div id="activePackagesList"></div>
+    </div>
 
-    <h2>⚙️ অ্যাডমিন প্যানেল: কন্ট্রোল ও পেমেন্ট সেন্টার</h2>
+    <!-- 💳 2. PAYMENT REQUEST & DATE FILTERING -->
+    <div class="admin-card">
+        <h3>💳 পেমেন্ট রিকোয়েস্ট ম্যানেজমেন্ট</h3>
+        
+        <!-- ফিল্টারিং অপশন -->
+        <div class="filter-box">
+            <div class="filter-group">
+                <label for="filterDate">📅 তারিখ অনুযায়ী দেখুন:</label>
+                <input type="date" id="filterDate" onchange="filterRequests()">
+            </div>
+            <div class="filter-group">
+                <label for="searchQuery">🔍 মোবাইল/TrxID খুঁজুন:</label>
+                <input type="text" id="searchQuery" oninput="filterRequests()" placeholder="নাম, নম্বর বা ট্রানজেকশন আইডি...">
+            </div>
+            <div class="filter-group filter-btn-container">
+                <button type="button" class="btn btn-secondary" onclick="resetFilter()">সকল পেমেন্ট দেখুন</button>
+            </div>
+        </div>
 
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>তারিখ</th>
+                        <th>প্রার্থীর নাম ও মোবাইল</th>
+                        <th>প্যাকেজ, মূল্য ও মেয়াদ</th>
+                        <th>TrxID</th>
+                        <th>স্ট্যাটাস</th>
+                        <th>অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody id="adminPkgReqList"></tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-
-
-<!-- 📦 1. PACKAGE CREATION & MANAGEMENT -->
-
-<div class="admin-card">
-
-    <h3>📦 প্যাকেজ ও সুবিধাসমূহ সেটআপ করুন</h3>
-
-    <div class="form-group">
-
-        <label>প্যাকেজের নাম:</label>
-
-        <input type="text" id="pkgTitle" placeholder="উদাহরণ: ১ মাসের প্রিমিয়াম প্যাকেজ">
-
-    </div>
-
-    <div class="form-group" style="display: flex; gap: 10px;">
-
-        <div style="flex:1;">
-
-            <label>মূল্য (৳):</label>
-
-            <input type="number" id="pkgPrice" placeholder="500">
-
-        </div>
-
-        <div style="flex:1;">
-
-            <label>মেয়াদ (দিন):</label>
-
-            <input type="number" id="pkgDays" placeholder="30">
-
-        </div>
-
-    </div>
-
-    <div class="form-group">
-
-        <label>সুবিধাসমূহ (কমা দিয়ে লিখুন):</label>
-
-        <textarea id="pkgFeatures" placeholder="উদাহরণ: সকল এক্সাম এক্সেস, লাইভ চ্যাট সাপোর্ট, রেজাল্ট এনালাইসিস"></textarea>
-
-    </div>
-
-    <button class="btn btn-success" onclick="addPackageAdmin()">+ নতুন প্যাকেজ যুক্ত করুন</button>
-
-
-
-    <h4 style="margin-top: 20px;">বর্তমান চালু থাকা প্যাকেজসমূহ:</h4>
-
-    <div id="activePackagesList"></div>
-
-</div>
-
-
-
-<!-- 💳 2. PAYMENT REQUEST & DATE FILTERING -->
-
-<div class="admin-card">
-
-    <h3>💳 পেমেন্ট রিকোয়েস্ট ম্যানেজমেন্ট</h3>
-
-    
-
-    <!-- ফিল্টারিং অপশন -->
-
-    <div class="filter-box">
-
-        <div>
-
-            <label>📅 তারিখ অনুযায়ী দেখুন:</label>
-
-            <input type="date" id="filterDate" onchange="filterRequests()">
-
-        </div>
-
-        <div>
-
-            <label>🔍 মোবাইল/TrxID খুঁজুন:</label>
-
-            <input type="text" id="searchQuery" oninput="filterRequests()" placeholder="নাম, নম্বর বা ট্রানজেকশন আইডি...">
-
-        </div>
-
-        <button class="btn" style="margin-top: 18px;" onclick="resetFilter()">সকল পেমেন্ট দেখুন</button>
-
-    </div>
-
-
-
-    <table>
-
-        <thead>
-
-            <tr>
-
-                <th>তারিখ</th>
-
-                <th>প্রার্থীর নাম ও মোবাইল</th>
-
-                <th>প্যাকেজ, মূল্য ও মেয়াদ</th>
-
-                <th>TrxID</th>
-
-                <th>স্ট্যাটাস</th>
-
-                <th>অ্যাকশন</th>
-
-            </tr>
-
-        </thead>
-
-        <tbody id="adminPkgReqList"></tbody>
-
-    </table>
-
-</div>
-
-
-
+<!-- JS File Connection -->
 <script src="js/admin.js"></script>
-
 <script>
-
-    window.onload = function() {
-
-        renderPackagesAdmin();
-
-        filterRequests();
-
-    };
-
+    window.addEventListener('DOMContentLoaded', function() {
+        if (typeof renderPackagesAdmin === 'function') renderPackagesAdmin();
+        if (typeof filterRequests === 'function') filterRequests();
+    });
 </script>
-
 </body>
-
-</html> 
-
+</html>
