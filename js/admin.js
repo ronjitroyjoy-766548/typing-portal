@@ -1,3 +1,5 @@
+// Admin Panel Management System (Secured)
+
 function escapeHTML(str) {
     if(!str) return '';
     return String(str).replace(/[&<>"']/g, function(m) {
@@ -5,120 +7,143 @@ function escapeHTML(str) {
     });
 }
 
-function switchAdminTab(tabId, element) {
-    document.querySelectorAll('.admin-tab-content').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.admin-menu-list li').forEach(li => li.classList.remove('active'));
+function addPackageAdmin() {
+    const title = document.getElementById('pkgTitle').value.trim();
+    const price = document.getElementById('pkgPrice').value.trim();
+    const days = document.getElementById('pkgDays').value.trim();
+    const features = document.getElementById('pkgFeatures').value.trim();
 
-    const target = document.getElementById(tabId);
-    if(target) target.classList.add('active');
-    if(element) element.classList.add('active');
-}
+    if(!title || !price || !days) return alert('❌ দয়া করে প্যাকেজের নাম, মূল্য ও মেয়াদ দিন!');
 
-function initAdminPanel() {
-    renderAdminExamList();
-    renderAllResultsLeaderboard();
-    renderPackagesAdmin();
-    filterRequests();
-    renderAdminNotices();
-    renderRegisteredUsers();
-}
-
-// Save Exam Setup to Array
-function saveLiveExamSetup() {
-    const title = document.getElementById('examSetupTitle').value.trim();
-    const lang = document.getElementById('examSetupLang').value;
-    const duration = parseInt(document.getElementById('examSetupDuration').value);
-    const passage = document.getElementById('examSetupPassage').value.trim();
-    const backspace = document.getElementById('allowBackspace').value;
-    const highlight = document.getElementById('allowHighlight').value;
-    const passWpm = parseInt(document.getElementById('examPassWpm').value);
-    const passAccuracy = parseInt(document.getElementById('examPassAccuracy').value);
-
-    let examList = JSON.parse(localStorage.getItem('adminExamList')) || [];
-    examList.push({
+    let pkgs = JSON.parse(localStorage.getItem('appPackages')) || [];
+    pkgs.push({
         id: Date.now(),
-        title, lang, duration, passage, backspace, highlight, passWpm, passAccuracy
+        title: title,
+        price: price,
+        days: parseInt(days),
+        features: features.split(',').map(f => f.trim()).join(', ')
     });
 
-    localStorage.setItem('adminExamList', JSON.stringify(examList));
-    alert('✅ পরীক্ষাটি সফলভাবে তালিকায় যুক্ত করা হয়েছে!');
-    renderAdminExamList();
+    localStorage.setItem('appPackages', JSON.stringify(pkgs));
+    alert('✅ প্যাকেজ সফলভাবে যুক্ত করা হয়েছে!');
+    
+    document.getElementById('pkgTitle').value = '';
+    document.getElementById('pkgPrice').value = '';
+    document.getElementById('pkgDays').value = '';
+    document.getElementById('pkgFeatures').value = '';
+    renderPackagesAdmin();
 }
 
-function renderAdminExamList() {
-    let examList = JSON.parse(localStorage.getItem('adminExamList')) || [];
-    const container = document.getElementById('adminExamList');
+function renderPackagesAdmin() {
+    let pkgs = JSON.parse(localStorage.getItem('appPackages')) || [];
+    const container = document.getElementById('activePackagesList');
     if(!container) return;
 
-    container.innerHTML = examList.length > 0 ? examList.map((e, index) => `
+    if(pkgs.length === 0) {
+        container.innerHTML = `<p style="color:#777; margin-top:10px;">কোনো প্যাকেজ তৈরি করা হয়নি।</p>`;
+        return;
+    }
+
+    container.innerHTML = pkgs.map(p => `
         <div class="pkg-item">
             <div>
-                <b>${index + 1}. ${escapeHTML(e.title)}</b> (${e.duration} মিনিট | ${e.lang})
-                <br><small style="color:#64748b;">ব্যাকস্পেস: ${e.backspace === 'yes' ? 'চালু' : 'বন্ধ'} | হাইলাইট: ${e.highlight === 'yes' ? 'চালু' : 'বন্ধ'} | পাস WPM: ${e.passWpm}</small>
+                <b>${escapeHTML(p.title)}</b> — <span style="color:#28a745;">৳${escapeHTML(p.price)}</span> (${p.days} দিন)
+                <br><small style="color:#666;">সুবিধা: ${escapeHTML(p.features)}</small>
             </div>
-            <button onclick="deleteExam(${e.id})" class="btn btn-danger" style="padding:5px 10px; font-size:12px;">ডিলিট</button>
+            <button onclick="deletePackage(${p.id})" class="btn btn-danger" style="padding:4px 8px; font-size:12px;">ডিলিট</button>
         </div>
-    `).join('') : '<p style="color:#64748b; margin-top:10px;">কোনো পরীক্ষা সেটিং করা নেই।</p>';
+    `).join('');
 }
 
-function deleteExam(id) {
-    if(confirm('পরীক্ষাটি তালিকা থেকে মুছে ফেলতে চান?')) {
-        let examList = JSON.parse(localStorage.getItem('adminExamList')) || [];
-        examList = examList.filter(e => Number(e.id) !== Number(id));
-        localStorage.setItem('adminExamList', JSON.stringify(examList));
-        renderAdminExamList();
+function deletePackage(id) {
+    if(confirm('আপনি কি এই প্যাকেজটি মুছে ফেলতে চান?')) {
+        let pkgs = JSON.parse(localStorage.getItem('appPackages')) || [];
+        pkgs = pkgs.filter(p => Number(p.id) !== Number(id));
+        localStorage.setItem('appPackages', JSON.stringify(pkgs));
+        renderPackagesAdmin();
     }
 }
 
-// Render Results with Rank / Leaderboard
-function renderAllResultsLeaderboard() {
-    let results = JSON.parse(localStorage.getItem('candidateResults')) || [];
-    const tbody = document.getElementById('allCandidateResultsTable');
-    if(!tbody) return;
+function filterRequests() {
+    const selectedDate = document.getElementById('filterDate').value;
+    const searchQuery = document.getElementById('searchQuery').value.toLowerCase().trim();
+    const requests = JSON.parse(localStorage.getItem('pkgRequests')) || [];
 
-    // Sort by WPM descending for rank/leaderboard
-    results.sort((a, b) => b.wpm - a.wpm || b.accuracy - a.accuracy);
+    let filtered = requests.filter(r => {
+        let matchDate = true;
+        if (selectedDate) {
+            const reqDate = r.rawDate || (r.id ? new Date(r.id).toISOString().split('T')[0] : '');
+            matchDate = (reqDate === selectedDate);
+        }
 
-    tbody.innerHTML = results.length > 0 ? results.map((r, i) => `
+        let matchSearch = true;
+        if (searchQuery) {
+            matchSearch = (r.user && r.user.toLowerCase().includes(searchQuery)) ||
+                          (r.mobile && r.mobile.includes(searchQuery)) ||
+                          (r.trx && r.trx.toLowerCase().includes(searchQuery));
+        }
+
+        return matchDate && matchSearch;
+    });
+
+    renderRequestsTable(filtered);
+}
+
+function resetFilter() {
+    document.getElementById('filterDate').value = '';
+    document.getElementById('searchQuery').value = '';
+    filterRequests();
+}
+
+function renderRequestsTable(list) {
+    const tbody = document.getElementById('adminPkgReqList');
+    if (!tbody) return;
+
+    tbody.innerHTML = list.length > 0 ? list.map(r => `
         <tr>
-            <td><b style="color:#0284c7;">#${i + 1}</b></td>
-            <td><b>${escapeHTML(r.name)}</b><br><small>${escapeHTML(r.userId)}</small></td>
-            <td>${escapeHTML(r.district || 'N/A')}</td>
-            <td>${escapeHTML(r.mobile || 'N/A')}</td>
-            <td><b>${r.wpm} WPM</b></td>
-            <td>${r.accuracy}%</td>
+            <td>${escapeHTML(r.date || 'N/A')}</td>
+            <td><b>${escapeHTML(r.user)}</b><br><small>${escapeHTML(r.mobile)}</small></td>
+            <td><b>${escapeHTML(r.package)}</b><br><span style="color:#16a34a;">৳${escapeHTML(r.price)}</span> (${r.days || 30} দিন)</td>
+            <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:bold;">${escapeHTML(r.trx)}</code></td>
             <td>
-                <span style="color:${r.status === 'পাস (Passed)' ? '#16a34a' : '#dc2626'}; font-weight:bold;">
+                <span style="padding:3px 8px; border-radius:12px; font-size:12px; font-weight:bold; 
+                    background:${r.status === 'Approved' ? '#dcfce7' : (r.status === 'Rejected' ? '#fee2e2' : '#fef3c7')};
+                    color:${r.status === 'Approved' ? '#166534' : (r.status === 'Rejected' ? '#991b1b' : '#92400e')};">
                     ${escapeHTML(r.status)}
                 </span>
             </td>
-            <td><small>${escapeHTML(r.date)}</small></td>
+            <td>
+                ${r.status === 'Pending' ? `
+                    <button onclick="updatePkgStatus(${r.id}, 'Approved', ${r.days || 30})" style="background:#22c55e; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px;">Approve</button>
+                    <button onclick="updatePkgStatus(${r.id}, 'Rejected', 0)" style="background:#ef4444; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px;">Reject</button>
+                ` : '<span>সম্পন্ন</span>'}
+            </td>
         </tr>
-    `).join('') : '<tr><td colspan="8" style="text-align:center;">কোনো ফলাফলের ডাটা নেই।</td></tr>';
+    `).join('') : '<tr><td colspan="6" style="text-align:center;">কোনো পেমেন্ট রিকোয়েস্ট পাওয়া যায়নি।</td></tr>';
 }
 
-function toggleResultPublication(status) {
-    localStorage.setItem('isResultPublished', status ? 'true' : 'false');
-    const badge = document.getElementById('pubStatusBadge');
-    if(badge) {
-        badge.innerText = status ? '(স্ট্যাটাস: প্রকাশিত)' : '(স্ট্যাটাস: গোপন)';
-        badge.style.color = status ? '#16a34a' : '#dc2626';
+function updatePkgStatus(reqId, newStatus, durationDays) {
+    let requests = JSON.parse(localStorage.getItem('pkgRequests')) || [];
+    const index = requests.findIndex(r => Number(r.id) === Number(reqId));
+
+    if (index !== -1) {
+        requests[index].status = newStatus;
+
+        if(newStatus === 'Approved') {
+            let expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + parseInt(durationDays));
+            requests[index].expiryDate = expiryDate.toISOString();
+
+            let activeUserPkg = {
+                packageName: requests[index].package,
+                expiryDate: expiryDate.toISOString(),
+                status: 'Active'
+            };
+            localStorage.setItem(`userPkg_${requests[index].mobile}`, JSON.stringify(activeUserPkg));
+        }
+
+        localStorage.setItem('pkgRequests', JSON.stringify(requests));
+        alert(`পেমেন্ট রিকোয়েস্টটি ${newStatus === 'Approved' ? 'এপ্রুভ করা হয়েছে এবং মেয়াদ যুক্ত হয়েছে!' : 'রিজেক্ট করা হয়েছে'}`);
+        filterRequests();
     }
-    alert(`ফলাফল ${status ? 'প্রকাশ' : 'গোপন'} করা হয়েছে!`);
-}
-
-// General Utilities
-function addPackageAdmin() { /* Standard Logic */ }
-function renderPackagesAdmin() { /* Standard Logic */ }
-function filterRequests() { /* Standard Logic */ }
-function renderAdminNotices() { /* Standard Logic */ }
-function postAdminNotice() { /* Standard Logic */ }
-function renderRegisteredUsers() {
-    const users = JSON.parse(localStorage.getItem('usersData')) || {};
-    const tbody = document.getElementById('registeredUsersTable');
-    if(!tbody) return;
-    let list = Object.values(users);
-    tbody.innerHTML = list.map((u, i) => `
-        <tr><td>${i+1}</td><td><b>${escapeHTML(u.fullname)}</b></td><td><code>${escapeHTML(u.userId)}</code></td><td>${escapeHTML(u.district || 'ঢাকা')}</td><td>${escapeHTML(u.mobile)}</td></tr>
-    `).join('');
 }
